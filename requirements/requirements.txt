@@ -1,0 +1,13 @@
+netcdf4
+pandas
+openpyxl
+geopandas
+numpy
+numba
+tbb
+tornado
+python-dateutil
+rasterio
+pyyaml
+matplotlib
+pillow

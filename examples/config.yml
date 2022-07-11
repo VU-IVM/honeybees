@@ -1,0 +1,15 @@
+draw:
+  draw_agents:
+    people:
+      draw_every_nth: 1
+  draw_geography:
+    rivers:
+      color: blue
+    cities:
+
+report:
+  age:
+    type: people
+    varname: age
+    function: mean
+    save: save
