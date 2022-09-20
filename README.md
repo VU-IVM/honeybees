@@ -1,5 +1,5 @@
 ## Introduction
-Honeybees is a agent-based modelling framework targeted at large-scale agent-based models written in Python. The framework is heavily inpsired by [Mesa](https://github.com/projectmesa/mesa>), but the agent class is fully adapted for high-speed and memory efficient agent operations.
+Honeybees is an agent-based modelling framework targeted at large-scale agent-based models written in Python. The framework is heavily inpsired by [Mesa](https://github.com/projectmesa/mesa>), but the agent class is fully adapted for high-speed and memory efficient agent operations.
 
 Rather than each class instance representing a single agent, each class can represent an (almost) infinite number of agents of the same type, such as farmers, governments or traders. Agent characteristics (and location) are stored in NumPy (or CuPy) arrays, where the first item of each array represents the characteristic of the first agent, the second item for the second agent, and so fort.
 
