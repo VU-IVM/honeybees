@@ -185,7 +185,7 @@ def clip_to_xy_bounds(src: DatasetReader, profile: Profile, array: np.ndarray, x
         'height': int(window.height),
         'width': int(window.width)
     })
-    return profile, array[ymin:ymax, xmin:xmax]
+    return profile, array[ymin:ymax, xmin:xmax].copy()
 
 
 def clip_to_other(array: np.ndarray, src_profile: Profile, other_profile: Profile) -> tuple[np.ndarray, Profile]:
@@ -212,7 +212,7 @@ def clip_to_other(array: np.ndarray, src_profile: Profile, other_profile: Profil
         'height': other_profile['height'],
         'width': other_profile['width'],
     })
-    outarray = array[ymin:ymin+other_profile['height'], xmin:xmin+other_profile['width']]
+    outarray = array[ymin:ymin+other_profile['height'], xmin:xmin+other_profile['width']].copy()
     return outarray, profile
 
 def upscale(array: np.ndarray, src_profile: np.ndarray, factor: np.ndarray) -> tuple[np.ndarray, Profile]:
