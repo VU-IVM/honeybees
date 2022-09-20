@@ -1,10 +1,16 @@
 # -*- coding: utf-8 -*-
 from setuptools import setup
+from pathlib import Path
+
+this_directory = Path(__file__).parent
+long_description = (this_directory / "README.md").read_text()
 
 setup(
       name='honeybees',
       version='0.1',
-      description='',
+      description='Honeybees is an agent-based modelling framework targeted at large-scale agent-based models.',
+      long_description=long_description,
+      long_description_content_type='text/markdown',
       url='http://github.com/jensdebruijn/honeybees',
       author='Jens de Bruijn',
       author_email='j.a.debruijn@outlook.com',
