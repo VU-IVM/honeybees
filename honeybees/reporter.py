@@ -213,28 +213,24 @@ class Reporter:
             values = deepcopy(values)  # need to copy item, because values are passed without applying any a function.
             self.report_value(name, values, conf)
         else:
-            if 'ids' in conf:
-                group_ids = getattr(agents, conf['scale'])
-                n_groups = conf['ids'].size
-                if callable(function):
-                    fn = function
-                elif function == 'mean':
-                    fn = self.mean_per_ID
-                elif function == 'sum':
-                    fn = self.sum_per_ID
-                else:
-                    raise ValueError(f'{function} function unknown')
-                self.report_value(name, fn(values, group_ids, n_groups), conf)
+            function, *args = conf['function'].split(',')
+            if function == 'mean':
+                value = np.mean(values)
+                self.report_value(name, value, conf)
+            elif function == 'sum':
+                value = np.sum(values)
+                self.report_value(name, value, conf)
+            elif function == 'sample':
+                sample = getattr(agents, "sample")
+                value = values[sample]
+                for s, v in zip(sample, value):
+                    self.report_value((name, s), v, conf)
+            elif function == 'groupcount':
+                for group in args:
+                    group = int(group)
+                    self.report_value((name, group), np.count_nonzero(values == group), conf)
             else:
-                if callable(function):
-                    fn = function
-                elif function == 'mean':
-                    fn = np.mean
-                elif function == 'sum':
-                    fn = np.sum
-                else:
-                    raise ValueError(f'{function} function unknown')
-                self.report_value(name, fn(getattr(agents, conf['varname'])), conf)
+                raise ValueError(f'{function} function unknown')
 
     def extract_agent_data(self, name: str, conf: dict) -> None:
         """This method is used to extract agent data and apply the relevant function to the given data.
