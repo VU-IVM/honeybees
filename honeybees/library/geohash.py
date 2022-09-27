@@ -252,7 +252,7 @@ def get_shifts(x: float, y: float, radius: Union[float, int], n_bits: int, minx:
     """
     if grid == 'longlat':
         width_deg, height_deg = window(n_bits, minx, maxx, miny, maxy)
-        distance_1_degree_longitude = DISTANCE_1_DEGREE_LATITUDE * cos(radians(x))
+        distance_1_degree_longitude = DISTANCE_1_DEGREE_LATITUDE * cos(radians(y))
         
         lon_distance_degrees = radius / distance_1_degree_longitude
         lat_distance_degrees = radius / DISTANCE_1_DEGREE_LATITUDE
@@ -302,7 +302,6 @@ def get_shifts(x: float, y: float, radius: Union[float, int], n_bits: int, minx:
                 break
 
     return shifts[:i]
-
 
 def plot_geohash_shifts(lon: float=4.8945, lat: float=52.3667, radius: Union[float, int]=5000, bits: int=31, show: bool=True) -> None:
     """This function can be used to explore how geohashes can be used to cover a given circle. There is a trade-off between precision of the geohash, speed and how well the shifts represent a circle. This function plots a circle and geohash windows required to cover the circle.
