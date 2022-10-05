@@ -290,7 +290,10 @@ def find_neighbors(
     )
 
     if search_target_ids is not None:
-        neighbours = search_target_ids[neighbours]
+        nanvalue = np.iinfo(dtype).max
+        reindex_neighbours = np.take(search_target_ids, neighbours, out=np.empty_like(neighbours), mode='clip')
+        reindex_neighbours[neighbours == nanvalue] = nanvalue
+        neighbours = reindex_neighbours
 
     return neighbours
 
