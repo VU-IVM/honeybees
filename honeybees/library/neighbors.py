@@ -248,6 +248,7 @@ def find_neighbors(
     Returns:
         neighbors: 2-dimensional NumPy array. The first dimension represents the results for each of the agents, the second dimension the indices of the neighbors for each of those agents. -1 represents no neighbor (possible only if less than the requested number of neighbors are available in the search radius.)
     """
+    assert grid in ('longlat', 'orthogonal')
     if locations.ndim == 2:
         assert locations.shape[1] == 2
         location_hashcodes = geohash.encode_locations(locations, minx, maxx, miny, maxy)
