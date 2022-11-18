@@ -35,4 +35,4 @@ def test_window_meters(bits=32, minx=0, maxx=10_000, miny=0, maxy=10_000):
     assert geohash.window(32, minx, maxx, miny, maxy) == (0.152587890625, 0.152587890625)
 
 def test_plot_geohashes(plt):
-    geohash.plot_geohashes()
+    geohash.plot_geohash_shifts(show=False)
