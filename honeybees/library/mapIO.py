@@ -35,7 +35,6 @@ class MapReader:
     def set_window_and_gt(self) -> None:
         """This function gets the geotransformation (gt) of the cut map, and the rows to read from the original data (rowslice, colslice)."""
         gt_ds = self.get_source_gt()
-        nrows, ncols = self.source_shape[-2], self.source_shape[-1]  # y, x
         
         colmin = floor((self.xmin - gt_ds[0]) / gt_ds[1])
         colmax = ceil((self.xmax - gt_ds[0]) / gt_ds[1])
@@ -58,7 +57,10 @@ class MapReader:
         assert colmin >= 0
         assert rowmin >= 0
 
-        self.gt = (gt_ds[0] + colmin * gt_ds[1], gt_ds[1], gt_ds[2], gt_ds[3] + rowmin * gt_ds[5], gt_ds[4], gt_ds[5])
+        if self.flipud:
+            self.gt = (gt_ds[0] + colmin * gt_ds[1], gt_ds[1], gt_ds[2], gt_ds[3] + rowmax * gt_ds[5], gt_ds[4], -gt_ds[5])
+        else:
+            self.gt = (gt_ds[0] + colmin * gt_ds[1], gt_ds[1], gt_ds[2], gt_ds[3] + rowmin * gt_ds[5], gt_ds[4], gt_ds[5])
 
     def sample_coords(self, coords: np.ndarray, *args, **kwargs) -> np.ndarray:
         """
