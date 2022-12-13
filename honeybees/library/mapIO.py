@@ -18,12 +18,11 @@ class MapReader:
     Args:
         bounds: tuple of xmin, xmax, ymin, ymax of study_area.
     """
-    def __init__(self, bounds: tuple[float, float, float, float], flipud=False) -> None:
+    def __init__(self, bounds: tuple[float, float, float, float]) -> None:
         self.xmin = bounds[0]
         self.xmax = bounds[1]
         self.ymin = bounds[2]
         self.ymax = bounds[3]
-        self.flipud = flipud
 
     def get_source_gt(self) -> None:
         """Get Geotransformation of the source file. Must be implemented in the child class."""
@@ -44,8 +43,11 @@ class MapReader:
         rowmin = (self.ymax - gt_ds[3]) / gt_ds[5]
         rowmax = (self.ymin - gt_ds[3]) / gt_ds[5]
         # Detect if array is flipped upside down. If so, reverse rowmin and rowmax and use self.flipup to flip array when returned
-        if self.flipud:
+        if rowmin > rowmax:
             rowmin, rowmax = rowmax, rowmin
+            self.flipud = True
+        else:
+            self.flipud = False
         
         rowmin = floor(rowmin)
         rowmax = ceil(rowmax)
@@ -112,8 +114,8 @@ class ArrayReader(MapReader):
         fp: Filepath of file.
         bounds: tuple of xmin, xmax, ymin, ymax of study_area.
     """
-    def __init__(self, fp: str, bounds: tuple[float, float, float, float], flipud: bool=False) -> None:
-        MapReader.__init__(self, bounds, flipud=flipud)
+    def __init__(self, fp: str, bounds: tuple[float, float, float, float]) -> None:
+        MapReader.__init__(self, bounds)
         self.fp = fp
         self.ds = rasterio.open(fp, 'r')
         self.set_window_and_gt()
@@ -176,7 +178,7 @@ class ArrayReader(MapReader):
             yield self.sample_geom(geom=geom, nodata=nodata)
 
 class NetCDFReader(MapReader):
-    def __init__(self, fp: str, varname: str, bounds: tuple, latname: str='lat', lonname: str='lon', timename: str='time', flipud: bool=False) -> None:
+    def __init__(self, fp: str, varname: str, bounds: tuple, latname: str='lat', lonname: str='lon', timename: str='time') -> None:
         """This class can be used to read data from NetCDF files, and then to easily sample data from it.
     
         Args:
@@ -192,7 +194,7 @@ class NetCDFReader(MapReader):
         self.lonname = lonname
         self.timename = timename
 
-        MapReader.__init__(self, bounds, flipud=flipud)
+        MapReader.__init__(self, bounds)
         self.ds = Dataset(self.fp, 'r')
         self.ds.set_always_mask(False)
         
