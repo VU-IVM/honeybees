@@ -241,7 +241,7 @@ class Reporter:
         """
         agents = getattr(self.model.agents, conf['type'])
         try:
-            values = getattr(agents, conf['varname'])
+            values = eval(f"agents.{conf['varname']}")
         except AttributeError:
             raise AttributeError(f"Trying to export '{conf['varname']}', but no such attribute exists for agent type '{conf['type']}'")
         if 'split' in conf and conf['split']:
