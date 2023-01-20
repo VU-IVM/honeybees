@@ -14,7 +14,7 @@ class Model:
         self.args = args
         self.logger = self.create_logger()
         self.logger.info("Initializing model")
-        self.current_timestep = 0
+        self.current_timestep = -1
         self.running = True
 
     @property
@@ -172,6 +172,8 @@ class Model:
             n = self.parse_step_str(step_size)
         else:
             n = step_size
+        self.current_time += self.timestep_length
+        self.current_timestep += 1
         
         assert isinstance(n, int) and n > 0
         for _ in range(n):
@@ -184,8 +186,6 @@ class Model:
             t2 = time()
             # print('\tstep time', t1- t0)
             # print('\treport time', t2 - t1)
-            self.current_time += self.timestep_length
-            self.current_timestep += 1
 
     def run(self, report=True):
         for _ in range(self.n_timesteps):
