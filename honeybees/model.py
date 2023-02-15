@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-from datetime import timedelta, datetime
+from datetime import timedelta
 from dateutil.relativedelta import relativedelta
 from time import time
 import logging
@@ -14,7 +14,7 @@ class Model:
         self.args = args
         self.logger = self.create_logger()
         self.logger.info("Initializing model")
-        self.current_timestep = -1
+        self.current_timestep = 0
         self.running = True
 
     @property
