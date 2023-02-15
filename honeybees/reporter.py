@@ -87,10 +87,7 @@ class Reporter:
             pass
         if 'format' not in conf:
             raise ValueError(f"Export format must be specified for {name} in config file (npy/csv/xlsx).")
-        if 'frequency' in conf and conf['frequency'] == 'initial_only':
-            fn = 'initial'
-        else:
-            fn = f"{self.timesteps[-1].isoformat().replace('-', '').replace(':', '')}"
+        fn = f"{self.timesteps[-1].isoformat().replace('-', '').replace(':', '')}"
         if conf['format'] == 'npy':
             fn += '.npy'
             fp = os.path.join(folder, fn)
@@ -131,9 +128,28 @@ class Reporter:
             raise ValueError(f"Save type for {name} in config file must be 'save', 'save+export' or 'export').")
         
         if conf['save'] == 'export' or conf['save'] == 'save+export':
-            if 'initial_only' in conf and conf['initial_only']:
-                if self.model.current_timestep == 0:
-                    self.export_value(name, value, conf)
+            if 'frequency' in conf and conf['frequency'] is not None:
+                if conf['frequency'] == 'initial':
+                    if self.model.current_timestep == 0:
+                        self.export_value(name, value, conf)
+                elif conf['frequency'] == 'final':
+                    if self.model.current_timestep == self.model.n_timesteps:
+                        self.export_value(name, value, conf)
+                elif 'every' in conf['frequency']:
+                    every = conf['frequency']['every']
+                    if every == 'year':
+                        month = conf['frequency']['month']
+                        day = conf['frequency']['day']
+                        if self.model.current_time.month == month and self.model.current_time.day == day:
+                            self.export_value(name, value, conf)
+                    elif every == 'month':
+                        day = conf['frequency']['day']
+                        if self.model.current_time.day == day:
+                            self.export_value(name, value, conf)
+                    else:
+                        raise ValueError(f"Frequency every {conf['every']} not recognized (must be 'yearly', or 'monthly').")
+                else:
+                    raise ValueError(f"Frequency {conf['frequency']} not recognized.")
             else:
                 self.export_value(name, value, conf)
 
