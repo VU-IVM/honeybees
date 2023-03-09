@@ -8,7 +8,7 @@ In the configuration file you can specify which data should be reported. In this
         - **type**: agent type e.g., farmer. Should be identical to attribute name in Agents class.
         - **function**: whether to use a function to parse the data. 'null' means the data is saved literally, 'mean' takes the mean etc. Options are sum/mean.
         - **varname**: attribute name of variable in agent class.
-        - **format**: format to save to. Can be 'csv' to save to csv-file per timestep, or 'npy' to save in NumPy binary format.
+        - **format**: format to save to. Can be 'csv' to save to csv-file per timestep, 'npy' to save in NumPy binary format, or 'npz' to save in NumPy compressed binary format.
         - **initial_only**: if true only save the data for the first timestep.
         - **save**: save variable in model run, or export, or both (save/save+export/export).
     - **name2**:
@@ -86,19 +86,23 @@ class Reporter:
         except OSError:
             pass
         if 'format' not in conf:
-            raise ValueError(f"Export format must be specified for {name} in config file (npy/csv/xlsx).")
+            raise ValueError(f"Export format must be specified for {name} in config file (npy/npz/csv/xlsx).")
         fn = f"{self.timesteps[-1].isoformat().replace('-', '').replace(':', '')}"
         if conf['format'] == 'npy':
             fn += '.npy'
             fp = os.path.join(folder, fn)
             np.save(fp, value)
+        elif conf['format'] == 'npz':
+            fn += '.npz'
+            fp = os.path.join(folder, fn)
+            np.savez_compressed(fp, data=value)
         elif conf['format'] == 'csv':
             fn += '.csv'
             fp = os.path.join(folder, fn)
             if isinstance(value, (np.ndarray, cp.ndarray)):
                 value = value.tolist()
             if len(value) > 100_000:
-                self.model.logger.info(f"Exporting {len(value)} items to csv. This might take a long time and take a lot of space. Consider using NumPy binary format (npy).")
+                self.model.logger.info(f"Exporting {len(value)} items to csv. This might take a long time and take a lot of space. Consider using NumPy (compressed) binary format (npy/npz).")
             with open(fp, 'w') as f:
                 f.write("\n".join([str(v) for v in value]))
         else:
@@ -299,6 +303,8 @@ class Reporter:
                 df.to_excel(filepath)
             elif export_format == 'npy':
                 np.save(filepath, df.values)
+            elif export_format == 'npz':
+                np.savez_compressed(filepath, data=df.values)
             else:
                 raise ValueError(f'save_to format {export_format} unknown')
         return report_dict
