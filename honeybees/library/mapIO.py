@@ -5,7 +5,7 @@ import datetime
 import numpy as np
 from math import ceil, floor
 from netCDF4 import Dataset, num2date
-from honeybees.library.raster import sample_from_map, write_to_array
+from honeybees.library.raster import sample_from_map
 import rasterio
 from rasterio import mask
 from rasterio.windows import Window
@@ -250,6 +250,8 @@ class NetCDFReader(MapReader):
         """Read the time indices from NetCDF file in Python datetime format. If time index does not exist, it is not set."""
         if self.timename in self.ds.variables:
             times = self.ds.variables[self.timename]
+            assert hasattr(times, 'units'), "NetCDF time variable must have units attribute."
+            assert hasattr(times, 'calendar'), "NetCDF time variable must have calendar attribute."
             self.datetimes = [num2date(t, units=times.units, calendar=times.calendar) for t in times[:]]
         else:
             self.datetimes = None
