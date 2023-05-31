@@ -273,7 +273,7 @@ class Reporter:
     def step(self) -> None:
         """This method is called every timestep. First appends the current model time to the list of times for the reporter. Then iterates through the data to be reported on and calls the extract_agent_data method for each of them."""
         self.timesteps.append(self.model.current_time)
-        if self.model.config is not None and 'report' in self.model.config:
+        if self.model.config is not None and 'report' in self.model.config and self.model.config['report'] is not None:
             for name, conf in self.model.config['report'].items():
                 self.extract_agent_data(name, conf)
 
