@@ -4,7 +4,9 @@
 import datetime
 import numpy as np
 from math import ceil, floor
-from netCDF4 import Dataset, num2date
+import xarray as xr
+import rioxarray
+# from netCDF4 import Dataset, num2date
 from honeybees.library.raster import sample_from_map
 import rasterio
 from rasterio import mask
@@ -12,17 +14,17 @@ from rasterio.windows import Window
 from inspect import getcallargs
 from typing import Union
 
-class MapReader:
+class Reader:
     """This is a base class to read mapdata from files. The class takes as input the bounds of the relevant area. Any input maps are automatically cut to only read the required area. The class contains several functions to make reading data per agent easy and fast.
 
     Args:
         bounds: tuple of xmin, xmax, ymin, ymax of study_area.
     """
-    def __init__(self, bounds: tuple[float, float, float, float]) -> None:
-        self.xmin = bounds[0]
-        self.xmax = bounds[1]
-        self.ymin = bounds[2]
-        self.ymax = bounds[3]
+    def __init__(self, xmin: float, ymin: float, xmax: float, ymax: float) -> None:
+        self.xmin = xmin
+        self.xmax = xmax
+        self.ymin = ymin
+        self.ymax = ymax
 
     def get_source_gt(self) -> None:
         """Get Geotransformation of the source file. Must be implemented in the child class."""
@@ -99,7 +101,7 @@ class MapReader:
             self.get_data_array_cache = array
             self.get_data_array_cache_args = call_args
         return array
-
+    
     def delete_get_data_array_cache(self) -> None:
         """If results from get_data_array were cached, these can be deleted using this function."""
         if hasattr(self, 'get_data_array_cache'):
@@ -107,15 +109,21 @@ class MapReader:
             delattr(self, 'get_data_array_cache_args')
 
 
-class ArrayReader(MapReader):
+class MapReader(Reader):
     """This class can be used to read image type data from files, and then to easily sample data from it.
     
     Args:
         fp: Filepath of file.
         bounds: tuple of xmin, xmax, ymin, ymax of study_area.
     """
-    def __init__(self, fp: str, bounds: tuple[float, float, float, float]) -> None:
-        MapReader.__init__(self, bounds)
+    def __init__(self, fp: str, xmin: float, ymin: float, xmax: float, ymax: float) -> None:
+        Reader.__init__(
+            self,
+            xmin=xmin,
+            ymin=ymin,
+            xmax=xmax,
+            ymax=ymax
+        )
         self.fp = fp
         self.ds = rasterio.open(fp, 'r')
         self.set_window_and_gt()
@@ -177,8 +185,8 @@ class ArrayReader(MapReader):
         for geom in geoms:
             yield self.sample_geom(geom=geom, nodata=nodata)
 
-class NetCDFReader(MapReader):
-    def __init__(self, fp: str, varname: str, bounds: tuple, latname: str='lat', lonname: str='lon', timename: str='time') -> None:
+class NetCDFReader(Reader):
+    def __init__(self, fp: str, varname: str, xmin: float, ymin: float, xmax: float, ymax: float, latname: str='lat', lonname: str='lon', timename: str='time') -> None:
         """This class can be used to read data from NetCDF files, and then to easily sample data from it.
     
         Args:
@@ -194,9 +202,14 @@ class NetCDFReader(MapReader):
         self.lonname = lonname
         self.timename = timename
 
-        MapReader.__init__(self, bounds)
-        self.ds = Dataset(self.fp, 'r')
-        self.ds.set_always_mask(False)
+        Reader.__init__(
+            self,
+            xmin=xmin,
+            ymin=ymin,
+            xmax=xmax,
+            ymax=ymax
+        )
+        self.ds = xr.open_dataset(self.fp)
         
         try:
             self.data = self.ds.variables[varname]
@@ -227,34 +240,16 @@ class NetCDFReader(MapReader):
         Returns:
             gt: Geotransformation of source file.
         """
-        ys = self.ds.variables[self.latname][:].astype(np.float64)
-        xs = self.ds.variables[self.lonname][:].astype(np.float64)
-        
-        dy = ys[1] - ys[0]
-        dx = xs[1] - xs[0]
-
-        # Assert NetCDF has a regular spaced grid
-        assert np.allclose(np.linspace(ys[0], ys[-1], ys.size), ys, rtol=0, atol=abs(dy) / 1e6)
-        assert np.allclose(np.linspace(xs[0], xs[-1], xs.size), xs, rtol=0, atol=abs(dx) / 1e6)
-
-        return (
-            xs[0] - 0.5 * dx,
-            dx,
-            0,
-            ys[0] - 0.5 * dy,
-            0,
-            dy
-        )  # rotation is always 0
-
+        gt = self.ds.rio.transform().to_gdal()
+        assert gt[2] == 0 and gt[4] == 0, "Geotransformation must have no rotation."
+        return gt
+    
     def get_current_time_index(self) -> None:
         """Read the time indices from NetCDF file in Python datetime format. If time index does not exist, it is not set."""
         if self.timename in self.ds.variables:
-            times = self.ds.variables[self.timename]
-            assert hasattr(times, 'units'), "NetCDF time variable must have units attribute."
-            assert hasattr(times, 'calendar'), "NetCDF time variable must have calendar attribute."
-            self.datetimes = [num2date(t, units=times.units, calendar=times.calendar) for t in times[:]]
+            self.time_index = self.ds[self.timename].to_index()
         else:
-            self.datetimes = None
+            self.time_index = None
 
     def _get_data_array(self, dt: datetime.datetime=None) -> np.ndarray:
         """
@@ -266,15 +261,71 @@ class NetCDFReader(MapReader):
         Returns:
             data: Array of data for study_area.
         """
-        if self.datetimes:
+        if self.time_index is not None:
             if not dt:
                 raise ValueError("Must specify datetime for NetCDF with time component by passing dt-argument to the function call.")
-            time_index = self.datetimes.index(dt)
-            array = self.data[time_index, self.rowslice, self.colslice]
+            time_index = self.time_index.get_loc(dt)
+            array = self.data.isel({self.timename: time_index, self.latname: self.rowslice, self.lonname: self.colslice})
         else:
             assert dt is None
-            array = self.data[self.rowslice, self.colslice]
+            array = self.data.isel({self.latname: self.rowslice, self.lonname: self.colslice, 'band': 0})
         if self.flipud:
             array = np.flipud(array)
         assert array.size > 0
         return array
+    
+    def close(self) -> None:
+        """Close NetCDF file."""
+        self.ds.close()
+    
+class ArrayReader(Reader):
+    def __init__(self, array: str, xmin: float, ymin: float, xmax: float, ymax: float, transform: Union[rasterio.Affine, tuple[float, float, float, float, float, float]]) -> None:
+        Reader.__init__(
+            self,
+            xmin=xmin,
+            ymin=ymin,
+            xmax=xmax,
+            ymax=ymax
+        )
+        self.array = array
+        if isinstance(transform, rasterio.Affine):
+            self.transform = transform.to_gdal()
+        else:
+            self.transform = transform
+        self.set_window_and_gt()
+
+    def get_source_gt(self) -> tuple[float, float, float, float, float, float]:
+        """Get geotransformation of the source file.
+        
+        Returns:
+            gt: Geotransformation of source file.
+        """
+        return self.transform
+
+    @property
+    def source_shape(self) -> tuple[int, int]:
+        """Get shape of source file.
+        
+        Returns:
+            height: height of array.
+            width: width of array.
+        """
+        return self.array.shape
+
+    def _get_data_array(self) -> np.ndarray:
+        """Read array from file for study_area.
+        
+        Returns:
+            data: Array of data for study_area.
+        """
+        data = self.array[self.rowslice, self.colslice]
+        if data.shape[0] == 1:
+            return data[0]
+        else:
+            return data
+
+    def sample_geom(self, geom: dict, all_touched=False, nodata: Union[float, int]=-1) -> np.ndarray:
+        raise NotImplementedError     
+
+    def sample_geoms(self, geoms: list[dict], nodata: int=-1):
+        raise NotImplementedError
