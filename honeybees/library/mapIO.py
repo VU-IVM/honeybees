@@ -272,7 +272,7 @@ class NetCDFReader(Reader):
         if self.flipud:
             array = np.flipud(array)
         assert array.size > 0
-        return array
+        return array.data
     
     def close(self) -> None:
         """Close NetCDF file."""
