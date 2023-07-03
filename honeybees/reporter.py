@@ -30,7 +30,7 @@ import pandas as pd
 from numba import njit
 from math import isinf
 from copy import deepcopy
-from typing import DefaultDict, Union, Any
+from typing import Union, Any
 
 class Reporter:
     """This class is used to report data to disk or for visualisation. The `step` method is called each timestep from the model.
