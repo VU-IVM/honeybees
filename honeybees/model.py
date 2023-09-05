@@ -119,11 +119,17 @@ class Model:
 
         return logger
 
-    def setup_config(self, config_path):
-        if config_path is not None:
-            with open(config_path, 'r') as f:
+    def setup_config(self, config):
+        if config is None:
+            return None
+        elif isinstance(config, dict):
+            return config
+        elif isinstance(config, str):
+            with open(config, 'r') as f:
                 config = yaml.load(f, Loader=yaml.FullLoader)
             return config
+        else:
+            raise ValueError(f"config should be a dict or a path to a yaml file, not {type(config)}")
 
     def parse_step_str(self, step_string):
         if step_string == 'day':
