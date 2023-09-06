@@ -6,7 +6,7 @@ import numpy as np
 from math import ceil, floor
 import xarray as xr
 import rioxarray
-# from netCDF4 import Dataset, num2date
+from netCDF4 import Dataset, num2date
 from honeybees.library.raster import sample_from_map
 import rasterio
 from rasterio import mask
@@ -240,7 +240,7 @@ class NetCDFReader(Reader):
         Returns:
             gt: Geotransformation of source file.
         """
-        gt = self.ds.rio.transform().to_gdal()
+        gt = self.ds.rename({self.lonname: 'x', self.latname: 'y'}).rio.transform().to_gdal()
         assert gt[2] == 0 and gt[4] == 0, "Geotransformation must have no rotation."
         return gt
     
@@ -268,11 +268,14 @@ class NetCDFReader(Reader):
             array = self.data.isel({self.timename: time_index, self.latname: self.rowslice, self.lonname: self.colslice})
         else:
             assert dt is None
-            array = self.data.isel({self.latname: self.rowslice, self.lonname: self.colslice, 'band': 0})
-        if self.flipud:
-            array = np.flipud(array)
+            array = self.data.isel({self.latname: self.rowslice, self.lonname: self.colslice})
+            #array = self.data[self.rowslice, self.colslice]
+        
         assert array.size > 0
-        return array.data
+        if self.flipud:
+            return np.flipud(array)
+        else:
+            return array.data
     
     def close(self) -> None:
         """Close NetCDF file."""
