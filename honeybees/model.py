@@ -110,7 +110,7 @@ class Model:
         if self.config and 'logging' in self.config and 'logfile' in self.config['logging']:
             logfile = self.config['logging']['logfile']
         else:
-            logfile = 'GEB.log'
+            logfile = 'honeybees.log'
         file_handler = logging.FileHandler(logfile, mode='w')
         logger.addHandler(file_handler)
 
