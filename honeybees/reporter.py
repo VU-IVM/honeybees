@@ -150,6 +150,8 @@ class Reporter:
                         day = conf['frequency']['day']
                         if self.model.current_time.day == day:
                             self.export_value(name, value, conf)
+                    elif every == 'day':
+                        self.export_value(name, value, conf)
                     else:
                         raise ValueError(f"Frequency every {conf['every']} not recognized (must be 'yearly', or 'monthly').")
                 else:
