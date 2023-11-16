@@ -265,7 +265,8 @@ class Reporter:
         try:
             values = eval(f"agents.{conf['varname']}")
         except AttributeError:
-            raise AttributeError(f"Trying to export '{conf['varname']}', but no such attribute exists for agent type '{conf['type']}'")
+            print(f"Trying to export '{conf['varname']}', but no such attribute exists for agent type '{conf['type']}'")
+            values = None
         if 'split' in conf and conf['split']:
             for ID, admin_values in zip(agents.ids, values):
                 self.parse_agent_data((name, ID), admin_values, agents, conf)
