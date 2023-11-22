@@ -46,7 +46,7 @@ setup(
         "pyyaml",
         "matplotlib",
         "xarray",
-        "rioxarray"
+        "rioxarray",
     ],
     extras_require={
         "plotting": ["cartopy"],
