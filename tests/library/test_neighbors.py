@@ -11,23 +11,36 @@ from honeybees.library import geohash
 from honeybees.library.raster import coord_to_pixel
 from honeybees.library.neighbors import find_neighbors
 
+
 @pytest.fixture(params=[1000])
 def n_locations(benchmark, request):
-   return request.param    
+    return request.param
+
 
 @pytest.fixture(params=[29, 31, 33])
 def bits(benchmark, request):
-   benchmark.group = '%s bits' % request.param
-   return request.param    
+    benchmark.group = "%s bits" % request.param
+    return request.param
+
 
 def test_neighbors_speed(benchmark, n_locations, bits, pytestconfig):
     radius = 5000
     n_neighbors = 5
 
-    locations = np.c_[np.random.uniform(33, 34, n_locations), np.random.uniform(-6, -5, n_locations)]
+    locations = np.c_[
+        np.random.uniform(33, 34, n_locations), np.random.uniform(-6, -5, n_locations)
+    ]
     search_ids = np.random.choice(np.arange(0, n_locations), 50, replace=False)
 
-    benchmark.pedantic(find_neighbors, args=(locations, radius, n_neighbors, bits), kwargs={'search_ids': search_ids}, warmup_rounds=1, iterations=10, rounds=10)
+    benchmark.pedantic(
+        find_neighbors,
+        args=(locations, radius, n_neighbors, bits),
+        kwargs={"search_ids": search_ids},
+        warmup_rounds=1,
+        iterations=10,
+        rounds=10,
+    )
+
 
 # @pytest.fixture(params=[
 #     ('Amsterdam Zuid', (4.816448743767209, 52.32154672402562, 4.914774420445526, 52.36205151188381)),
@@ -60,64 +73,91 @@ def test_neighbors_speed(benchmark, n_locations, bits, pytestconfig):
 
 #     return generate_locations(population, gt[0] + ul[0] * gt[1], gt[3] + lr[1] * gt[5], gt[1], -gt[5]), population.sum()
 
+
 @njit
 def generate_locations(population, x_offset, y_offset, x_step, y_step):
     agent_locations = np.empty((population.sum(), 2), dtype=np.float32)
     count = 0
     for row in range(0, population.shape[0]):
         for col in range(0, population.shape[1]):
-
             cell_population = population[row, col]
             if cell_population != 0:
-
                 ymax = y_offset + row * y_step
                 ymin = ymax + y_step
 
                 xmin = x_offset + col * x_step
                 xmax = xmin + x_step
-                
-                agent_locations[count:count+cell_population, 0] = np.random.uniform(xmin, xmax, size=cell_population)
-                agent_locations[count:count+cell_population, 1] = np.random.uniform(ymin, ymax, size=cell_population)
+
+                agent_locations[count : count + cell_population, 0] = np.random.uniform(
+                    xmin, xmax, size=cell_population
+                )
+                agent_locations[count : count + cell_population, 1] = np.random.uniform(
+                    ymin, ymax, size=cell_population
+                )
 
                 count += cell_population
 
     return agent_locations
 
 
-@pytest.fixture(params=[
-    ('Amsterdam Zuid', (4.816448743767209, 52.32154672402562, 4.914774420445526, 52.36205151188381)),
-    ('Amsterdam', (4.731224060058707, 52.27829742431646, 5.071867942810172, 52.43067169189453)),
-    # ('Noord Holland', (4.4941659, 52.16555405, 5.32160902, 53.18319321)),
-    # ('Nederland', (3.36078191, 50.72349167, 7.22709513, 53.5545845)),
-    # ('Europe', (-31.289030075073242, 34.93054962158203, 68.93136596679688, 81.8519287109375))
-])
+@pytest.fixture(
+    params=[
+        (
+            "Amsterdam Zuid",
+            (
+                4.816448743767209,
+                52.32154672402562,
+                4.914774420445526,
+                52.36205151188381,
+            ),
+        ),
+        (
+            "Amsterdam",
+            (
+                4.731224060058707,
+                52.27829742431646,
+                5.071867942810172,
+                52.43067169189453,
+            ),
+        ),
+        # ('Noord Holland', (4.4941659, 52.16555405, 5.32160902, 53.18319321)),
+        # ('Nederland', (3.36078191, 50.72349167, 7.22709513, 53.5545845)),
+        # ('Europe', (-31.289030075073242, 34.93054962158203, 68.93136596679688, 81.8519287109375))
+    ]
+)
 def test_neighbors_real_world_speed(benchmark, real_world_area, bits, pytestconfig):
-    if not pytestconfig.getoption('extended'):
+    if not pytestconfig.getoption("extended"):
         pytest.skip("Only runs in extended mode")
 
     locations, population_count = real_world_area
 
     radius = 5000
     n_neighbors = 5
-    
+
     find_agent_ids = np.arange(0, locations.shape[0])[::100]
 
-    benchmark.pedantic(find_neighbors, args=(
-        locations,
-        radius,
-        n_neighbors,
-        bits,
-        -180,
-        180,
-        -90,
-        90,
-        'longlat',
-        find_agent_ids,
-        None
-    ), warmup_rounds=1, iterations=1, rounds=1)
-    benchmark.extra_info['population_count'] = int(population_count)
-    benchmark.extra_info['radius'] = radius
-    benchmark.extra_info['n_neighbors'] = n_neighbors
+    benchmark.pedantic(
+        find_neighbors,
+        args=(
+            locations,
+            radius,
+            n_neighbors,
+            bits,
+            -180,
+            180,
+            -90,
+            90,
+            "longlat",
+            find_agent_ids,
+            None,
+        ),
+        warmup_rounds=1,
+        iterations=1,
+        rounds=1,
+    )
+    benchmark.extra_info["population_count"] = int(population_count)
+    benchmark.extra_info["radius"] = radius
+    benchmark.extra_info["n_neighbors"] = n_neighbors
 
 
 # def test_neighbors_real_world_speed_mesa(benchmark, real_world_area, bits, pytestconfig):
@@ -131,12 +171,13 @@ def test_neighbors_real_world_speed(benchmark, real_world_area, bits, pytestconf
 
 #     radius = 500
 #     n_neighbors = 5
-    
+
 #     # print(locations.shape[0])
 #     # find_agent_ids = np.random.choice(np.arange(0, locations.shape[0]), 50, replace=False)
 #     find_agent_ids = np.arange(0, locations.shape[0])
 
 #     benchmark.pedantic(find_neighbors, args=(locations, find_agent_ids, radius, n_neighbors, bits), warmup_rounds=1, iterations=5, rounds=1)
+
 
 def test_find_neighbors_coordinates_plot(plt):
     n_locations = 1000
@@ -144,12 +185,17 @@ def test_find_neighbors_coordinates_plot(plt):
     n_neighbor = 5
     bits = 29
 
-    locations = np.c_[np.random.uniform(33, 33.5, n_locations), np.random.uniform(-6, -5.5, n_locations)]
+    locations = np.c_[
+        np.random.uniform(33, 33.5, n_locations),
+        np.random.uniform(-6, -5.5, n_locations),
+    ]
     search_ids = np.random.choice(np.arange(0, n_locations), 50, replace=False)
 
     counts = np.zeros(n_locations, dtype=np.int32)
     for i in range(1000):
-        neighbors = find_neighbors(locations, radius, n_neighbor, bits, search_ids=search_ids)
+        neighbors = find_neighbors(
+            locations, radius, n_neighbor, bits, search_ids=search_ids
+        )
         for neighbor in neighbors.reshape(neighbors.size):
             if neighbor != 4294967295:
                 counts[neighbor] += 1
@@ -161,12 +207,23 @@ def test_find_neighbors_coordinates_plot(plt):
     for agent, agent_neighbors in zip(search_ids, neighbors):
         agent_neighbors = agent_neighbors[agent_neighbors != 4294967295]
         assert np.unique(agent_neighbors).size == agent_neighbors.size
-        geohash_coord = geohash.decode(geohash.encode_precision(*locations[agent], bits), bits)
+        geohash_coord = geohash.decode(
+            geohash.encode_precision(*locations[agent], bits), bits
+        )
         shifts = geohash.get_shifts(*geohash_coord, radius, bits)
-        neighbor_geohashes = geohash.shift_multiple(geohash.encode_precision(*locations[agent], bits), bits, shifts)
+        neighbor_geohashes = geohash.shift_multiple(
+            geohash.encode_precision(*locations[agent], bits), bits, shifts
+        )
         neighbor_geohashes = np.sort(neighbor_geohashes)
         for j, neighbor_geohash in enumerate(neighbor_geohashes):
-            patch = mpatches.Rectangle(geohash.decode(neighbor_geohash, bits), window_width, window_height, facecolor='orange', edgecolor='black', alpha=j/neighbor_geohashes.size*0.5+0.1)
+            patch = mpatches.Rectangle(
+                geohash.decode(neighbor_geohash, bits),
+                window_width,
+                window_height,
+                facecolor="orange",
+                edgecolor="black",
+                alpha=j / neighbor_geohashes.size * 0.5 + 0.1,
+            )
             ax.add_patch(patch)
 
         loc = locations[agent]
@@ -181,23 +238,38 @@ def test_find_neighbors_coordinates_plot(plt):
 
     ax.scatter(locations[:, 0], locations[:, 1], s=4)
 
+
 def test_find_neighbors_meters_plot(plt):
     n_locations = 10000
     radius = 400
     n_neighbor = 5
     bits = 18
 
-    minx=0
-    maxx=20000
-    miny=0
-    maxy=40000
+    minx = 0
+    maxx = 20000
+    miny = 0
+    maxy = 40000
 
-    locations = np.c_[np.random.uniform(0, 20000, n_locations), np.random.uniform(0, 40000, n_locations)]
+    locations = np.c_[
+        np.random.uniform(0, 20000, n_locations),
+        np.random.uniform(0, 40000, n_locations),
+    ]
     search_ids = np.random.choice(np.arange(0, n_locations), 50, replace=False)
 
     counts = np.zeros(n_locations, dtype=np.int32)
     for _ in range(100):
-        neighbors = find_neighbors(locations, radius, n_neighbor, bits, minx=minx, maxx=maxx, miny=miny, maxy=maxy, grid='orthogonal', search_ids=search_ids)
+        neighbors = find_neighbors(
+            locations,
+            radius,
+            n_neighbor,
+            bits,
+            minx=minx,
+            maxx=maxx,
+            miny=miny,
+            maxy=maxy,
+            grid="orthogonal",
+            search_ids=search_ids,
+        )
         for neighbor in neighbors.reshape(neighbors.size):
             if neighbor != 4294967295:
                 counts[neighbor] += 1
@@ -209,12 +281,40 @@ def test_find_neighbors_meters_plot(plt):
     for agent, agent_neighbors in zip(search_ids, neighbors):
         agent_neighbors = agent_neighbors[agent_neighbors != 4294967295]
         assert np.unique(agent_neighbors).size == agent_neighbors.size
-        geohash_coord = geohash.decode(geohash.encode_precision(*locations[agent], bits, minx=minx, maxx=maxx, miny=miny, maxy=maxy), bits)
-        shifts = geohash.get_shifts(geohash_coord[0], geohash_coord[1], radius, bits, minx, maxx, miny, maxy, grid='orthogonal')
-        neighbor_geohashes = geohash.shift_multiple(geohash.encode_precision(*locations[agent], bits, minx=minx, maxx=maxx, miny=miny, maxy=maxy), bits, shifts)
+        geohash_coord = geohash.decode(
+            geohash.encode_precision(
+                *locations[agent], bits, minx=minx, maxx=maxx, miny=miny, maxy=maxy
+            ),
+            bits,
+        )
+        shifts = geohash.get_shifts(
+            geohash_coord[0],
+            geohash_coord[1],
+            radius,
+            bits,
+            minx,
+            maxx,
+            miny,
+            maxy,
+            grid="orthogonal",
+        )
+        neighbor_geohashes = geohash.shift_multiple(
+            geohash.encode_precision(
+                *locations[agent], bits, minx=minx, maxx=maxx, miny=miny, maxy=maxy
+            ),
+            bits,
+            shifts,
+        )
         neighbor_geohashes = np.sort(neighbor_geohashes)
         for j, neighbor_geohash in enumerate(neighbor_geohashes):
-            patch = mpatches.Rectangle(geohash.decode(neighbor_geohash, bits, minx, maxx, miny, maxy), window_width, window_height, facecolor='orange', edgecolor='black', alpha=j/neighbor_geohashes.size*0.5+0.1)
+            patch = mpatches.Rectangle(
+                geohash.decode(neighbor_geohash, bits, minx, maxx, miny, maxy),
+                window_width,
+                window_height,
+                facecolor="orange",
+                edgecolor="black",
+                alpha=j / neighbor_geohashes.size * 0.5 + 0.1,
+            )
             ax.add_patch(patch)
 
         loc = locations[agent]

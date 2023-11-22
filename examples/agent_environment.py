@@ -13,8 +13,9 @@ from honeybees.agents import AgentBaseClass
 from honeybees.library.raster import sample_from_map
 from honeybees.library.mapIO import ArrayReader
 
-MAP = np.random.random(100 ** 2).reshape(100, 100)
-MAP_GEOTRANSFORM = (-10, 0.2, 0, 10, 0, -.2)
+MAP = np.random.random(100**2).reshape(100, 100)
+MAP_GEOTRANSFORM = (-10, 0.2, 0, 10, 0, -0.2)
+
 
 class People(AgentBaseClass):
     def __init__(self, model, agents):
@@ -25,11 +26,15 @@ class People(AgentBaseClass):
         self.locations = np.zeros((self.n, 2), dtype=np.float32)
         self.set_locations()
 
-        self.data = ArrayReader('examples/random.tif', bounds=self.model.bounds)
+        self.data = ArrayReader("examples/random.tif", bounds=self.model.bounds)
 
     def set_locations(self):
-        self.locations[:, 0] = np.random.uniform(self.model.xmin, self.model.xmax, self.n)
-        self.locations[:, 1] = np.random.uniform(self.model.ymin, self.model.ymax, self.n)
+        self.locations[:, 0] = np.random.uniform(
+            self.model.xmin, self.model.xmax, self.n
+        )
+        self.locations[:, 1] = np.random.uniform(
+            self.model.ymin, self.model.ymax, self.n
+        )
 
     def step(self):
         values_from_array = sample_from_map(MAP, self.locations, MAP_GEOTRANSFORM)
@@ -43,32 +48,44 @@ class Agents(AgentBaseClass):
     def step(self):
         self.people.step()
 
+
 class ABMModel(Model):
     def __init__(self, config_path, study_area, args=None):
         self.area = Area(self, study_area)
         self.agents = Agents(self)
-        
+
         current_time = date(2020, 1, 1)
         timestep_length = relativedelta(years=1)
         n_timesteps = 10
-        
-        Model.__init__(self, current_time, timestep_length, config_path, args=args, n_timesteps=n_timesteps)
+
+        Model.__init__(
+            self,
+            current_time,
+            timestep_length,
+            config_path,
+            args=args,
+            n_timesteps=n_timesteps,
+        )
 
         self.reporter = Reporter(self)
 
 
-if __name__ == '__main__':
-    fp = 'examples/random.tif'
-    with rasterio.open(fp, 'w', driver='GTiff', height=MAP.shape[0], width=MAP.shape[1], count=1, dtype=MAP.dtype, transform=rasterio.Affine.from_gdal(*MAP_GEOTRANSFORM)) as dst:
+if __name__ == "__main__":
+    fp = "examples/random.tif"
+    with rasterio.open(
+        fp,
+        "w",
+        driver="GTiff",
+        height=MAP.shape[0],
+        width=MAP.shape[1],
+        count=1,
+        dtype=MAP.dtype,
+        transform=rasterio.Affine.from_gdal(*MAP_GEOTRANSFORM),
+    ) as dst:
         dst.write(MAP, 1)
-    
-    config_path = 'examples/config.yml'
-    study_area = {
-        'xmin': -10,
-        'xmax': 10,
-        'ymin': -10,
-        'ymax': 10
-    }
+
+    config_path = "examples/config.yml"
+    study_area = {"xmin": -10, "xmax": 10, "ymin": -10, "ymax": 10}
     model = ABMModel(config_path, study_area)
 
     for _ in range(1):

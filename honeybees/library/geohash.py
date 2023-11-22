@@ -10,8 +10,11 @@ from typing import Union
 RADIUS_EARTH_EQUATOR = 40075017  # m
 DISTANCE_1_DEGREE_LATITUDE = RADIUS_EARTH_EQUATOR / 360  # m
 
+
 @njit(parallel=True, cache=True)
-def encode_locations(locations: np.ndarray, minx: float, maxx: float, miny: float, maxy: float) -> np.ndarray:
+def encode_locations(
+    locations: np.ndarray, minx: float, maxx: float, miny: float, maxy: float
+) -> np.ndarray:
     """Geohash 2d-array of locations.
 
     Args:
@@ -20,7 +23,7 @@ def encode_locations(locations: np.ndarray, minx: float, maxx: float, miny: floa
         maxx: Maximum x-value of the entire relevant space.
         miny: Minimum y-value of the entire relevant space.
         miny: Maximum y-value of the entire relevant space.
-    
+
     Returns:
         hashcodes: Geohash codes array for all locations.
     """
@@ -29,10 +32,11 @@ def encode_locations(locations: np.ndarray, minx: float, maxx: float, miny: floa
         hashcodes[i] = encode(locations[i, 0], locations[i, 1], minx, maxx, miny, maxy)
     return hashcodes
 
+
 @njit(cache=True)
-def reduce_precision(geohashes: np.ndarray, bits: int, inplace: bool=False):
+def reduce_precision(geohashes: np.ndarray, bits: int, inplace: bool = False):
     """Reduces the precision of input geohashes.
-    
+
     Args:
         geohashes: Array of geohashes.
         bits: Required number of bits for output geohashes
@@ -47,22 +51,24 @@ def reduce_precision(geohashes: np.ndarray, bits: int, inplace: bool=False):
         geohashes_reduced_precision[i] = geohashes[i] >> (61 - bits) | precision_tag
     return geohashes_reduced_precision
 
+
 @njit(cache=True)
 def get_precision_tag(bits: int) -> np.int64:
     """Get a 64-bit integer that can be ORed with a geohash. This is done by setting the most-significant bit to 1.
-    
+
     Args:
         bits: Number of bits wanted for resulting geohash.
-    
+
     Returns:
         precision_tag: 64-bit integer that can be ORed with geohash to set precision.
     """
     return np.int64(0x4000000000000000) | np.int64(0x1) << bits
 
+
 @njit(cache=True)
 def widen(bitstring: np.int64) -> np.int64:
     """To interleave the x and y pair of the geohash we `widen` the bit-values by inserting a 0 value to the left of each of the bits.
-    
+
     Args:
         bitstring: Geohash of x or y only.
 
@@ -70,21 +76,22 @@ def widen(bitstring: np.int64) -> np.int64:
         interleaved_bitstring: Interleaved geohash of x or y.
     """
     bitstring |= bitstring << 16
-    bitstring &= np.int64(0x0000ffff0000ffff)
+    bitstring &= np.int64(0x0000FFFF0000FFFF)
     bitstring |= bitstring << 8
-    bitstring &= np.int64(0x00ff00ff00ff00ff)
+    bitstring &= np.int64(0x00FF00FF00FF00FF)
     bitstring |= bitstring << 4
-    bitstring &= np.int64(0x0f0f0f0f0f0f0f0f)
+    bitstring &= np.int64(0x0F0F0F0F0F0F0F0F)
     bitstring |= bitstring << 2
     bitstring &= np.int64(0x3333333333333333)
     bitstring |= bitstring << 1
     bitstring &= np.int64(0x5555555555555555)
     return bitstring
 
+
 @njit(cache=True)
 def unwiden(bitstring: np.int64) -> np.int64:
     """To unpack a geohash in its x and y pair, the inverse of widen needs to happen. This function removes a bit from the left of each other bit.
-    
+
     Args:
         bitstring: Widened bitstring.
 
@@ -95,19 +102,28 @@ def unwiden(bitstring: np.int64) -> np.int64:
     bitstring ^= bitstring >> 1
     bitstring &= np.int64(0x3333333333333333)
     bitstring ^= bitstring >> 2
-    bitstring &= np.int64(0x0f0f0f0f0f0f0f0f)
+    bitstring &= np.int64(0x0F0F0F0F0F0F0F0F)
     bitstring ^= bitstring >> 4
-    bitstring &= np.int64(0x00ff00ff00ff00ff)
+    bitstring &= np.int64(0x00FF00FF00FF00FF)
     bitstring ^= bitstring >> 8
-    bitstring &= np.int64(0x0000ffff0000ffff)
+    bitstring &= np.int64(0x0000FFFF0000FFFF)
     bitstring ^= bitstring >> 16
-    bitstring &= np.int64(0x00000000ffffffff)
+    bitstring &= np.int64(0x00000000FFFFFFFF)
     return bitstring
 
-@njit(cache=True, locals={'y': nb.float64, 'x': nb.float64, 'bits': nb.int16})
-def encode_precision(x: float, y: float, bits: int, minx: Union[int, float]=-180, maxx: Union[int, float]=180, miny: Union[int, float]=-90, maxy: Union[int, float]=90) -> np.int64:
+
+@njit(cache=True, locals={"y": nb.float64, "x": nb.float64, "bits": nb.int16})
+def encode_precision(
+    x: float,
+    y: float,
+    bits: int,
+    minx: Union[int, float] = -180,
+    maxx: Union[int, float] = 180,
+    miny: Union[int, float] = -90,
+    maxy: Union[int, float] = 90,
+) -> np.int64:
     """Geohashes a x/y pair for given precision in bits.
-    
+
     Args:
         x: x-value.
         y: y-value.
@@ -122,10 +138,18 @@ def encode_precision(x: float, y: float, bits: int, minx: Union[int, float]=-180
     """
     return encode(x, y, minx, maxx, miny, maxy) >> (61 - bits) | get_precision_tag(bits)
 
-@njit(cache=True, locals={'y': nb.float64, 'x': nb.float64})
-def encode(x: float, y: float, minx: Union[int, float]=-180, maxx: Union[int, float]=180, miny: Union[int, float]=-90, maxy: Union[int, float]=90):
+
+@njit(cache=True, locals={"y": nb.float64, "x": nb.float64})
+def encode(
+    x: float,
+    y: float,
+    minx: Union[int, float] = -180,
+    maxx: Union[int, float] = 180,
+    miny: Union[int, float] = -90,
+    maxy: Union[int, float] = 90,
+):
     """Geohashes a x/y pair.
-    
+
     Args:
         x: x-value.
         y: y-value.
@@ -137,14 +161,36 @@ def encode(x: float, y: float, minx: Union[int, float]=-180, maxx: Union[int, fl
     Returns:
         geohash: Geohash for x/y pair.
     """
-    xs = widen(np.int64(np.float64((x + np.int64(maxx)) * np.int64(0x80000000) / np.float64(maxx - minx))) & np.int64(0x7fffffff))
-    ys = widen(np.int64(np.float64((y + np.int64(maxy)) * np.int64(0x80000000) / np.float64(maxy - miny))) & np.int64(0x7fffffff))
-    return (ys >> 1 | xs)
+    xs = widen(
+        np.int64(
+            np.float64(
+                (x + np.int64(maxx)) * np.int64(0x80000000) / np.float64(maxx - minx)
+            )
+        )
+        & np.int64(0x7FFFFFFF)
+    )
+    ys = widen(
+        np.int64(
+            np.float64(
+                (y + np.int64(maxy)) * np.int64(0x80000000) / np.float64(maxy - miny)
+            )
+        )
+        & np.int64(0x7FFFFFFF)
+    )
+    return ys >> 1 | xs
 
-@njit(cache=True, locals={'shifted': nb.int64})
-def decode(gh: np.int64, bits: int, minx: Union[int, float]=-180, maxx: Union[int, float]=180, miny: Union[int, float]=-90, maxy: Union[int, float]=90) -> tuple[float, float]:
+
+@njit(cache=True, locals={"shifted": nb.int64})
+def decode(
+    gh: np.int64,
+    bits: int,
+    minx: Union[int, float] = -180,
+    maxx: Union[int, float] = 180,
+    miny: Union[int, float] = -90,
+    maxy: Union[int, float] = 90,
+) -> tuple[float, float]:
     """Decodes a geohashes into x/y pair for given precision in bits.
-    
+
     Args:
         gh: Geohash
         bits: Precision for geohash.
@@ -158,14 +204,25 @@ def decode(gh: np.int64, bits: int, minx: Union[int, float]=-180, maxx: Union[in
         y: Decoded y-value
     """
     shifted = gh << (61 - bits)
-    y = np.float64(unwiden(shifted >> 1) & np.int64(0x3fffffff)) / np.int64(0x40000000) * (maxy - miny) + miny
-    x = np.float64(unwiden(shifted) & np.int64(0x7fffffff)) / np.int64(0x80000000) * (maxx - minx) + minx
+    y = (
+        np.float64(unwiden(shifted >> 1) & np.int64(0x3FFFFFFF))
+        / np.int64(0x40000000)
+        * (maxy - miny)
+        + miny
+    )
+    x = (
+        np.float64(unwiden(shifted) & np.int64(0x7FFFFFFF))
+        / np.int64(0x80000000)
+        * (maxx - minx)
+        + minx
+    )
     return x, y
+
 
 @njit(cache=True)
 def shift(gh: np.int64, bits: int, dx: int, dy: int):
     """Shifts a geohash by number of windows in given x and y-direction.
-    
+
     Args:
         gh: Geohash
         bits: Precision for geohash.
@@ -181,12 +238,15 @@ def shift(gh: np.int64, bits: int, dx: int, dy: int):
     else:
         sx = dx
         sy = dy
-    return (widen(unwiden(gh >> 1) + sy) << 1 | widen(unwiden(gh) + sx)) & ~(-np.int64(0x1) << bits) | get_precision_tag(bits)
+    return (widen(unwiden(gh >> 1) + sy) << 1 | widen(unwiden(gh) + sx)) & ~(
+        -np.int64(0x1) << bits
+    ) | get_precision_tag(bits)
+
 
 @njit(cache=True)
 def shift_multiple(gh: np.int64, bits: int, shifts: np.ndarray) -> np.ndarray:
     """Shifts a geohash by number of windows in given x and y-directions.
-    
+
     Args:
         gh: Geohash
         bits: Precision for geohash.
@@ -206,13 +266,22 @@ def shift_multiple(gh: np.int64, bits: int, shifts: np.ndarray) -> np.ndarray:
         else:
             sx = shifts[i, 0]
             sy = shifts[i, 1]
-        ghs[i] = (widen(unwidened_shifted_gh + sy) << 1 | widen(unwidened_gh + sx)) & ~(-np.int64(0x1) << bits) | precision
+        ghs[i] = (widen(unwidened_shifted_gh + sy) << 1 | widen(unwidened_gh + sx)) & ~(
+            -np.int64(0x1) << bits
+        ) | precision
     return ghs
 
+
 @njit(cache=True)
-def window(bits: int, minx: Union[int, float]=-180, maxx: Union[int, float]=180, miny: Union[int, float]=-90, maxy: Union[int, float]=90) -> tuple[float, float]:
+def window(
+    bits: int,
+    minx: Union[int, float] = -180,
+    maxx: Union[int, float] = 180,
+    miny: Union[int, float] = -90,
+    maxy: Union[int, float] = 90,
+) -> tuple[float, float]:
     """Gets the width and height of a geohash window for given precision and area size.
-    
+
     Args:
         bits: Precision for geohash.
         minx: Minimum x-value of the entire relevant space.
@@ -232,14 +301,25 @@ def window(bits: int, minx: Union[int, float]=-180, maxx: Union[int, float]=180,
         window_width = window_height * ratio / 2
     return window_width, window_height
 
+
 @njit
-def get_shifts(x: float, y: float, radius: Union[float, int], n_bits: int, minx: Union[float, int]=-180, maxx: Union[float, int]=180, miny: Union[float, int]=-90, maxy: Union[float, int]=90, grid='longlat') -> np.ndarray:
+def get_shifts(
+    x: float,
+    y: float,
+    radius: Union[float, int],
+    n_bits: int,
+    minx: Union[float, int] = -180,
+    maxx: Union[float, int] = 180,
+    miny: Union[float, int] = -90,
+    maxy: Union[float, int] = 90,
+    grid="longlat",
+) -> np.ndarray:
     """Gets the geohash shifts required to cover a circle (x, y) with given radius for given number of bits.
-    
+
     Args:
         x: x-coordinate of circle center.
         y: y-coordinate of circle center.
-        radius: Circle radius. 
+        radius: Circle radius.
         bits: Precision for geohash.
         minx: Minimum x-value of the entire relevant space.
         maxx: Maximum x-value of the entire relevant space.
@@ -250,10 +330,10 @@ def get_shifts(x: float, y: float, radius: Union[float, int], n_bits: int, minx:
     Returns:
         shifts: Geohash shifts required to cover circle for given number of bits.
     """
-    if grid == 'longlat':
+    if grid == "longlat":
         width_deg, height_deg = window(n_bits, minx, maxx, miny, maxy)
         distance_1_degree_longitude = DISTANCE_1_DEGREE_LATITUDE * cos(radians(y))
-        
+
         lon_distance_degrees = radius / distance_1_degree_longitude
         lat_distance_degrees = radius / DISTANCE_1_DEGREE_LATITUDE
 
@@ -262,22 +342,22 @@ def get_shifts(x: float, y: float, radius: Union[float, int], n_bits: int, minx:
 
         w_max = int(lon_distance_degrees / width_deg)
         h_max = int(lat_distance_degrees / height_deg)
-    
-    elif grid == 'orthogonal':
+
+    elif grid == "orthogonal":
         width_per_cell_m, height_per_cell_m = window(n_bits, minx, maxx, miny, maxy)
-        
+
         w_max = int(radius / width_per_cell_m)
         h_max = int(radius / height_per_cell_m)
     else:
         raise ValueError("'grid' must be either 'longlat' or 'orthogonal'")
-    
+
     shifts = np.empty(((w_max * 2 + 1) * (2 * h_max + 1), 2), dtype=np.int32)
     shifts[0] = [0, 0]
     i = 1
-    for y in range(1, h_max+1):
+    for y in range(1, h_max + 1):
         shifts[i] = [0, y]
         i += 1
-    for x in range(1, w_max+1):
+    for x in range(1, w_max + 1):
         shifts[i] = [x, 0]
         i += 1
     for y in range(-h_max, 0):
@@ -286,9 +366,11 @@ def get_shifts(x: float, y: float, radius: Union[float, int], n_bits: int, minx:
     for x in range(-w_max, 0):
         shifts[i] = [x, 0]
         i += 1
-    for x in range(1, w_max+1):
-        for y in range(1, h_max+1):
-            if ((x * width_per_cell_m) ** 2 + (y * height_per_cell_m) ** 2) ** 0.5 <= radius:
+    for x in range(1, w_max + 1):
+        for y in range(1, h_max + 1):
+            if (
+                (x * width_per_cell_m) ** 2 + (y * height_per_cell_m) ** 2
+            ) ** 0.5 <= radius:
                 shifts[i] = [x, y]
                 i += 1
                 shifts[i] = [-x, y]
@@ -303,7 +385,14 @@ def get_shifts(x: float, y: float, radius: Union[float, int], n_bits: int, minx:
 
     return shifts[:i]
 
-def plot_geohash_shifts(lon: float=4.8945, lat: float=52.3667, radius: Union[float, int]=5000, bits: int=31, show: bool=True) -> None:
+
+def plot_geohash_shifts(
+    lon: float = 4.8945,
+    lat: float = 52.3667,
+    radius: Union[float, int] = 5000,
+    bits: int = 31,
+    show: bool = True,
+) -> None:
     """This function can be used to explore how geohashes can be used to cover a given circle. There is a trade-off between precision of the geohash, speed and how well the shifts represent a circle. This function plots a circle and geohash windows required to cover the circle.
 
     Args:
@@ -323,7 +412,7 @@ def plot_geohash_shifts(lon: float=4.8945, lat: float=52.3667, radius: Union[flo
         import cartopy.crs as ccrs
     except ImportError:
         raise ImportError("Cartopy not found, could not create plot")
-    
+
     imagery = OSM()
 
     gh = encode_precision(lon, lat, bits)
@@ -346,9 +435,18 @@ def plot_geohash_shifts(lon: float=4.8945, lat: float=52.3667, radius: Union[flo
             minlat = gh_lat
         if gh_lat > maxlat:
             maxlat = gh_lat
-        patches.append(mpatches.Rectangle((gh_lon, gh_lat), window_width, window_height, transform=ccrs.PlateCarree(), facecolor='none', edgecolor='black'))
+        patches.append(
+            mpatches.Rectangle(
+                (gh_lon, gh_lat),
+                window_width,
+                window_height,
+                transform=ccrs.PlateCarree(),
+                facecolor="none",
+                edgecolor="black",
+            )
+        )
 
-    patches[0].set_facecolor('#ff000088')
+    patches[0].set_facecolor("#ff000088")
 
     maxlon += window_width
     maxlat += window_height
@@ -359,7 +457,9 @@ def plot_geohash_shifts(lon: float=4.8945, lat: float=52.3667, radius: Union[flo
     ax.set_extent((minlon - lond, maxlon + lond, minlat - latd, maxlat + latd))
     ax.add_image(imagery, 14)
 
-    ax.set_title(f"lon: {lon}, lat: {lat}, radius: {radius}, bits: {bits}", size='x-small')
+    ax.set_title(
+        f"lon: {lon}, lat: {lat}, radius: {radius}, bits: {bits}", size="x-small"
+    )
 
     for patch in patches:
         ax.add_patch(patch)
@@ -368,9 +468,10 @@ def plot_geohash_shifts(lon: float=4.8945, lat: float=52.3667, radius: Union[flo
         plt.show()
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     import matplotlib.pyplot as plt
+
     plot_geohash_shifts(bits=31, show=False)
-    plt.savefig('geohash_31bits.svg', bbox_inches='tight')
+    plt.savefig("geohash_31bits.svg", bbox_inches="tight")
     plot_geohash_shifts(bits=32, show=False)
-    plt.savefig('geohash_32bits.svg', bbox_inches='tight')
+    plt.savefig("geohash_32bits.svg", bbox_inches="tight")

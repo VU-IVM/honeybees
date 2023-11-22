@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 import numpy as np
 
+
 class AgentBaseClass:
     def __init__(self):
         pass
@@ -20,4 +21,4 @@ class AgentBaseClass:
         raise NotImplementedError
 
     def step(self):
-        raise NotImplementedError(f'step function not implemented in {self}')
+        raise NotImplementedError(f"step function not implemented in {self}")

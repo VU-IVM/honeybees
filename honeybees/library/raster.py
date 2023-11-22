@@ -12,10 +12,16 @@ from datetime import datetime
 import os
 from typing import Union
 
+
 @njit
-def reproject_pixel(gt_from: tuple[float, float, float, float, float, float], gt_to: tuple[float, float, float, float, float, float], px_in: int, py_in: int) -> tuple[int, int]:
+def reproject_pixel(
+    gt_from: tuple[float, float, float, float, float, float],
+    gt_to: tuple[float, float, float, float, float, float],
+    px_in: int,
+    py_in: int,
+) -> tuple[int, int]:
     """Reproject pixel.
-    
+
     Args:
         gt_from: Orginal geotransformation.
         gt_to: Target geotransformation.
@@ -25,6 +31,7 @@ def reproject_pixel(gt_from: tuple[float, float, float, float, float, float], gt
     px_out = (gt_from[0] + gt_from[1] * px_in - gt_to[0]) / gt_to[1]
     py_out = (gt_from[3] + gt_from[5] * py_in - gt_to[3]) / gt_to[5]
     return int(px_out), int(py_out)
+
 
 @njit
 def pixel_to_coord(px: int, py: int, gt: tuple) -> Tuple[float, float]:
@@ -44,6 +51,7 @@ def pixel_to_coord(px: int, py: int, gt: tuple) -> Tuple[float, float]:
         return lon, lat
     else:
         raise ValueError("Cannot convert rotated maps")
+
 
 @njit(parallel=True)
 def pixels_to_coords(pixels: np.ndarray, gt: tuple) -> np.ndarray:
@@ -69,15 +77,17 @@ def pixels_to_coords(pixels: np.ndarray, gt: tuple) -> np.ndarray:
 
 
 @njit
-def coord_to_pixel(coord: np.ndarray, gt: tuple[float, float, float, float, float, float]) -> tuple[int, int]:
+def coord_to_pixel(
+    coord: np.ndarray, gt: tuple[float, float, float, float, float, float]
+) -> tuple[int, int]:
     """Converts coordinate to pixel (x, y) for given geotransformation.
 
-        Parameters:
-            coord: the coordinate (lon, lat) that need to be transformed to pixel
-            gt: the geotransformation. Must be unrotated
+    Parameters:
+        coord: the coordinate (lon, lat) that need to be transformed to pixel
+        gt: the geotransformation. Must be unrotated
 
-        Returns:
-            array: tuple of pixel (x, y)
+    Returns:
+        array: tuple of pixel (x, y)
     """
     if gt[2] + gt[4] == 0:
         px = (coord[0] - gt[0]) / gt[1]
@@ -88,15 +98,17 @@ def coord_to_pixel(coord: np.ndarray, gt: tuple[float, float, float, float, floa
 
 
 @njit(parallel=True)
-def coords_to_pixels(coords, gt: tuple, dtype=np.uint32) -> tuple[np.ndarray, np.ndarray]:
+def coords_to_pixels(
+    coords, gt: tuple, dtype=np.uint32
+) -> tuple[np.ndarray, np.ndarray]:
     """Converts array of coordinates to array of pixels for given geotransformation.
 
-        Parameters:
-            coords: the coordinates (lon, lat) that need to be transformed to pixels (shape: 2, n)
-            gt: the geotransformation. Must be unrotated
+    Parameters:
+        coords: the coordinates (lon, lat) that need to be transformed to pixels (shape: 2, n)
+        gt: the geotransformation. Must be unrotated
 
-        Returns:
-            array: 2d-array of pixels per coordinate (shape: 2, n)
+    Returns:
+        array: 2d-array of pixels per coordinate (shape: 2, n)
     """
     if gt[2] + gt[4] == 0:
         size = coords.shape[0]
@@ -115,16 +127,20 @@ def coords_to_pixels(coords, gt: tuple, dtype=np.uint32) -> tuple[np.ndarray, np
 
 
 @njit(parallel=False)
-def sample_from_map(array: np.ndarray, coords: np.ndarray, gt: tuple[float, float, float, float, float, float]) -> np.ndarray:
+def sample_from_map(
+    array: np.ndarray,
+    coords: np.ndarray,
+    gt: tuple[float, float, float, float, float, float],
+) -> np.ndarray:
     """Sample coordinates from a map. Can handle multiple dimensions.
 
-        Parameters:
-            array: the map to sample from (2+n dimensions)
-            coords: the coordinates used to sample (shape: 2, m)
-            gt: the geotransformation. Must be unrotated
+    Parameters:
+        array: the map to sample from (2+n dimensions)
+        coords: the coordinates used to sample (shape: 2, m)
+        gt: the geotransformation. Must be unrotated
 
-        Returns:
-            array: values per coordinate
+    Returns:
+        array: values per coordinate
     """
     assert gt[2] + gt[4] == 0
     size = coords.shape[0]
@@ -132,14 +148,25 @@ def sample_from_map(array: np.ndarray, coords: np.ndarray, gt: tuple[float, floa
     y_offset = gt[3]
     x_step = gt[1]
     y_step = gt[5]
-    values = np.empty((size, ) + array.shape[:-2], dtype=array.dtype)
+    values = np.empty((size,) + array.shape[:-2], dtype=array.dtype)
     for i in prange(size):
-        values[i] = array[..., int((coords[i, 1] - y_offset) / y_step), int((coords[i, 0] - x_offset) / x_step)]
+        values[i] = array[
+            ...,
+            int((coords[i, 1] - y_offset) / y_step),
+            int((coords[i, 0] - x_offset) / x_step),
+        ]
     return values
 
 
-@njit(parallel=False)  # Writing to an array cannot be parallelized as race conditions would occur.
-def write_to_array(array: np.ndarray, values: np.ndarray, coords: np.ndarray, gt: tuple[float, float, float, float, float, float]):
+@njit(
+    parallel=False
+)  # Writing to an array cannot be parallelized as race conditions would occur.
+def write_to_array(
+    array: np.ndarray,
+    values: np.ndarray,
+    coords: np.ndarray,
+    gt: tuple[float, float, float, float, float, float],
+):
     """Write values using coordinates to a map. If multiple coordinates map to a single cell,
     the values are added. The operation is inplace
 
@@ -160,10 +187,22 @@ def write_to_array(array: np.ndarray, values: np.ndarray, coords: np.ndarray, gt
     x_step = gt[1]
     y_step = gt[5]
     for i in range(size):
-        array[int((coords[i, 1] - y_offset) / y_step), int((coords[i, 0] - x_offset) / x_step)] += values[i]
+        array[
+            int((coords[i, 1] - y_offset) / y_step),
+            int((coords[i, 0] - x_offset) / x_step),
+        ] += values[i]
     return array
 
-def clip_to_xy_bounds(src: DatasetReader, profile: Profile, array: np.ndarray, xmin: int, xmax: int, ymin: int, ymax: int) -> np.ndarray:
+
+def clip_to_xy_bounds(
+    src: DatasetReader,
+    profile: Profile,
+    array: np.ndarray,
+    xmin: int,
+    xmax: int,
+    ymin: int,
+    ymax: int,
+) -> np.ndarray:
     """Clips rasterio dataset to given bounds.
 
     Args:
@@ -180,17 +219,21 @@ def clip_to_xy_bounds(src: DatasetReader, profile: Profile, array: np.ndarray, x
         array: Array data.
     """
     window = Window.from_slices(slice(ymin, ymax), slice(xmin, xmax))
-    profile.update({
-        'transform': src.window_transform(window),
-        'height': int(window.height),
-        'width': int(window.width)
-    })
+    profile.update(
+        {
+            "transform": src.window_transform(window),
+            "height": int(window.height),
+            "width": int(window.width),
+        }
+    )
     return profile, array[ymin:ymax, xmin:xmax].copy()
 
 
-def clip_to_other(array: np.ndarray, src_profile: Profile, other_profile: Profile) -> tuple[np.ndarray, Profile]:
+def clip_to_other(
+    array: np.ndarray, src_profile: Profile, other_profile: Profile
+) -> tuple[np.ndarray, Profile]:
     """Clip array to rasterio profile.
-    
+
     Args:
         array: Array to clip.
         src_profile: Rasterio profile of source array.
@@ -201,23 +244,36 @@ def clip_to_other(array: np.ndarray, src_profile: Profile, other_profile: Profil
         profile: Updated profile.
     """
 
-    xmin = round((other_profile['transform'].c - src_profile['transform'].c) / src_profile['transform'].a)
+    xmin = round(
+        (other_profile["transform"].c - src_profile["transform"].c)
+        / src_profile["transform"].a
+    )
     assert abs(xmin) == xmin  # assert xmin is positive
-    ymin = round((other_profile['transform'].f - src_profile['transform'].f) / src_profile['transform'].e)
+    ymin = round(
+        (other_profile["transform"].f - src_profile["transform"].f)
+        / src_profile["transform"].e
+    )
     assert abs(ymin) == ymin  # assert ymin is positive
-    
+
     profile = dict(src_profile)
-    profile.update({
-        'transform': other_profile['transform'],
-        'height': other_profile['height'],
-        'width': other_profile['width'],
-    })
-    outarray = array[ymin:ymin+other_profile['height'], xmin:xmin+other_profile['width']].copy()
+    profile.update(
+        {
+            "transform": other_profile["transform"],
+            "height": other_profile["height"],
+            "width": other_profile["width"],
+        }
+    )
+    outarray = array[
+        ymin : ymin + other_profile["height"], xmin : xmin + other_profile["width"]
+    ].copy()
     return outarray, profile
 
-def upscale(array: np.ndarray, src_profile: np.ndarray, factor: np.ndarray) -> tuple[np.ndarray, Profile]:
-    """"Upscale array and rasterio profile by x amount.
-    
+
+def upscale(
+    array: np.ndarray, src_profile: np.ndarray, factor: np.ndarray
+) -> tuple[np.ndarray, Profile]:
+    """ "Upscale array and rasterio profile by x amount.
+
     Args:
         array: Array to upscale.
         src_profile: Rasterio profile of source array.
@@ -228,8 +284,8 @@ def upscale(array: np.ndarray, src_profile: np.ndarray, factor: np.ndarray) -> t
         profile: Updated rasterio profile.
     """
     profile = dict(src_profile)
-    transform = src_profile['transform']
-    profile['transform'] = Affine(
+    transform = src_profile["transform"]
+    profile["transform"] = Affine(
         transform.a / factor,
         transform.b,
         transform.c,
@@ -237,14 +293,17 @@ def upscale(array: np.ndarray, src_profile: np.ndarray, factor: np.ndarray) -> t
         transform.e / factor,
         transform.f,
     )
-    profile['height'] =src_profile['height'] * factor
-    profile['width'] = src_profile['width'] * factor
+    profile["height"] = src_profile["height"] * factor
+    profile["width"] = src_profile["width"] * factor
     array = array.repeat(factor, axis=-2).repeat(factor, axis=-1)
     return array, profile
 
+
 class NetCDFHasEmtpyLayersException(Exception):
-   """Raised when one or more layers are empty"""
-   pass
+    """Raised when one or more layers are empty"""
+
+    pass
+
 
 class CreateNetCDF:
     """Class to create easy create a spatial NetCDF-file.
@@ -266,6 +325,7 @@ class CreateNetCDF:
         compression_level: NetCDF compression level (1-9)
         comment: Optional dataset comment.
     """
+
     def __init__(
         self,
         fp: str,
@@ -282,75 +342,77 @@ class CreateNetCDF:
         chunksizes: tuple[int],
         fill_value: Union[float, int],
         compression_level: int,
-        comment: str=None
+        comment: str = None,
     ) -> None:
         self.fp = fp
-        self.ds = Dataset(self.fp, 'w', format='NETCDF4')
+        self.ds = Dataset(self.fp, "w", format="NETCDF4")
         self.ds.set_always_mask(False)
-        
-        self.ds.date_created = datetime.utcnow().strftime('%Y-%m-%d %H:%M:%S')
+
+        self.ds.date_created = datetime.utcnow().strftime("%Y-%m-%d %H:%M:%S")
         self.ds.source = source
         self.ds.institution = institution
         self.ds.title = title
-        self.ds.Conventions = 'CF-1.6'
+        self.ds.Conventions = "CF-1.6"
         if comment:
             self.ds.comment = comment
-        
-        if n_timesteps:
-            self.ds.createDimension('time', n_timesteps)
-        self.ds.createDimension('lat', len(lats))
-        self.ds.createDimension('lon', len(lons))
 
-        lat = self.ds.createVariable('lat', 'f8', ('lat',))
-        lat.standard_name = 'latitude'
-        lat.units = 'degrees_north'
+        if n_timesteps:
+            self.ds.createDimension("time", n_timesteps)
+        self.ds.createDimension("lat", len(lats))
+        self.ds.createDimension("lon", len(lons))
+
+        lat = self.ds.createVariable("lat", "f8", ("lat",))
+        lat.standard_name = "latitude"
+        lat.units = "degrees_north"
         lat.axis = "Y"
         lat[:] = lats
 
-        lon = self.ds.createVariable('lon', 'f8', ('lon',))
-        lon.standard_name = 'longitude'
-        lon.units = 'degrees_east'
+        lon = self.ds.createVariable("lon", "f8", ("lon",))
+        lon.standard_name = "longitude"
+        lon.units = "degrees_east"
         lon.axis = "X"
         lon[:] = lons
-        
-        crs = self.ds.createVariable('spatial_ref', 'i4')
+
+        crs = self.ds.createVariable("spatial_ref", "i4")
         crs.spatial_ref = CRS.from_epsg(epsg).to_wkt()
-        
+
         if n_timesteps:
-            self.times = self.ds.createVariable('time', 'f4', ('time',))
-            self.times.standard_name = 'time'
-            self.times.long_name = 'time'
-            self.times.units = 'hours since 1970-01-01 00:00:00'
-            self.times.calendar = 'gregorian'
+            self.times = self.ds.createVariable("time", "f4", ("time",))
+            self.times.standard_name = "time"
+            self.times.long_name = "time"
+            self.times.units = "hours since 1970-01-01 00:00:00"
+            self.times.calendar = "gregorian"
 
         self.values = self.ds.createVariable(
             varname,
             datatype=dtype,
-            dimensions=('time', 'lat', 'lon') if n_timesteps else ('lat', 'lon'),
+            dimensions=("time", "lat", "lon") if n_timesteps else ("lat", "lon"),
             chunksizes=chunksizes,
             zlib=bool(compression_level),
             complevel=compression_level,  # ignored if zlib is False
             contiguous=False,  # do not neccesarily store contiguous on disk
-            fill_value=fill_value
+            fill_value=fill_value,
         )
         self.values.standard_name = varname
         self.values.units = units
         self.current_timestep = 0
 
-    def write(self, values: np.ndarray, dt: datetime=None) -> None:
+    def write(self, values: np.ndarray, dt: datetime = None) -> None:
         """Write layer to file.
-        
+
         Args:
             values: Values to write.
             dt: Optional datetime to write. If NetCDF has no time dimension, do not write.
         """
         if dt:
             assert dt >= datetime(1970, 1, 1)
-            self.times[self.current_timestep] = date2num(dt, units=self.times.units, calendar=self.times.calendar)
+            self.times[self.current_timestep] = date2num(
+                dt, units=self.times.units, calendar=self.times.calendar
+            )
             self.values[self.current_timestep, :, :] = values
             self.current_timestep += 1
         else:
-            assert not hasattr(self, 'times')
+            assert not hasattr(self, "times")
             self.values[:, :] = values
 
     def __enter__(self):
@@ -358,7 +420,7 @@ class CreateNetCDF:
 
     def __exit__(self, exc_type, exc_value, traceback):
         """Check if NetCDF has no empty layers on exit."""
-        if hasattr(self, 'times'):
+        if hasattr(self, "times"):
             checklayer = self.times
         else:
             checklayer = self.values

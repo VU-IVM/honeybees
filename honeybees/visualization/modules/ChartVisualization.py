@@ -13,7 +13,7 @@ from honeybees.visualization.ModularVisualization import VisualizationElement
 
 
 class ChartModule(VisualizationElement):
-    """ Each chart can visualize one or more model-level series as lines
+    """Each chart can visualize one or more model-level series as lines
      with the data value on the Y axis and the step number as the X axis.
 
     At the moment, each call to the render method returns a list of the most
@@ -44,6 +44,7 @@ class ChartModule(VisualizationElement):
         the same way that "color" is currently.
 
     """
+
     package_includes = ["Chart.min.js", "ChartModule.js"]
 
     def __init__(self, series, canvas_height=200, canvas_width=500):
@@ -65,20 +66,19 @@ class ChartModule(VisualizationElement):
         # if first series has no color, assure remaining series have no color and
         # assign colors from color wheel
         if self.series:
-            if 'color' in self.series[0]:
-                assert all('color' in series for series in self.series)
+            if "color" in self.series[0]:
+                assert all("color" in series for series in self.series)
             else:
-                assert all('color' not in series for series in self.series)
+                assert all("color" not in series for series in self.series)
                 series_length = len(self.series)
-                color_map = plt.get_cmap('gist_rainbow')
+                color_map = plt.get_cmap("gist_rainbow")
                 for i, series in enumerate(self.series):
                     color = mcolors.rgb2hex(color_map(i / series_length))
-                    series['color'] = color
+                    series["color"] = color
 
         series_json = json.dumps(self.series)
         new_element = "new ChartModule({}, {},  {})"
-        new_element = new_element.format(series_json, canvas_width,
-                                         canvas_height)
+        new_element = new_element.format(series_json, canvas_width, canvas_height)
         self.js_code = "elements.push(" + new_element + ");"
 
         self.reset()
@@ -86,31 +86,35 @@ class ChartModule(VisualizationElement):
     def render(self, model, update):
         if not update:
             self.current_chart_x_index = 0
-        
-        xs  = model.reporter.timesteps[self.current_chart_x_index: ]
+
+        xs = model.reporter.timesteps[self.current_chart_x_index :]
         if model.timestep_length.days >= 1:
-            dateformat = '%d %b %Y'
+            dateformat = "%d %b %Y"
         else:
-            dateformat = '%d %b %Y %H:%M'
+            dateformat = "%d %b %Y %H:%M"
         xs = [x.strftime(dateformat) for x in xs]
 
         ys = []
         for s in self.series:
             name = s["name"]
             yvar = model.reporter.variables[name]
-            if 'ID' in s:
-                yvar = yvar[s['ID']]
-            yvar = yvar[self.current_chart_x_index: ]
+            if "ID" in s:
+                yvar = yvar[s["ID"]]
+            yvar = yvar[self.current_chart_x_index :]
             ys.append(yvar)  # Latest values
             if len(xs) != len(yvar):
                 if len(yvar) == 0:
-                    model.logger.info(f"Variable '{name}' cannot be shown in chart because it is not found in reporter.")
+                    model.logger.info(
+                        f"Variable '{name}' cannot be shown in chart because it is not found in reporter."
+                    )
                 else:
-                    model.logger.info(f"Variable '{name}' cannot be shown in chart for some timesteps because it is not found in reporter for all requested timesteps.")
-        
+                    model.logger.info(
+                        f"Variable '{name}' cannot be shown in chart for some timesteps because it is not found in reporter for all requested timesteps."
+                    )
+
         self.current_chart_x_index += len(xs)
-        
-        return {'xs': xs, 'ys': ys}
+
+        return {"xs": xs, "ys": ys}
 
     def reset(self):
         self.current_chart_x_index = 0

@@ -1,0 +1,28 @@
+name: pytest
+
+on:
+  push:
+    branches: '*'
+  pull_request:
+    branches: '*'
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v2
+    - name: Set up Python
+      uses: actions/setup-python@v2
+      with:
+        python-version: 3.11
+    - name: Install dependencies
+      run: |
+        sudo apt-add-repository ppa:ubuntugis/ubuntugis-unstable
+        sudo apt-get update
+        sudo apt-get install gdal-bin libgdal-dev
+        pip install GDAL==$(gdal-config --version)
+        git config --global url."https://${{ secrets.PAT }}@github".insteadOf https://github
+        python -m pip install --upgrade pip
+        pip install .[tests]
+    - name: Run tests
+      run: pytest

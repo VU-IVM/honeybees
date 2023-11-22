@@ -2,10 +2,11 @@
 from random import random
 from numba import njit
 
+
 @njit
 def bernoulli(p: float) -> bool:
     """Takes value from bernoulli distribution.
-    
+
     Args:
         p: Probability
 
