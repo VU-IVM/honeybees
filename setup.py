@@ -56,6 +56,6 @@ setup(
             "sphinx-autodoc-typehints",
             "sphinxcontrib-autoprogram",
         ],
-        "tests": ["matplotlib", "pytest", "pytest-plt", "pytest-benchmark"],
+        "tests": ["matplotlib", "pytest", "pytest-plt", "pytest-benchmark", "cartopy"],
     },
 )
