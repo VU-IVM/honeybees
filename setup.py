@@ -45,6 +45,7 @@ setup(
         "rasterio",
         "pyyaml",
         "matplotlib",
+        "xarray",
     ],
     extras_require={
         "plotting": ["cartopy"],
