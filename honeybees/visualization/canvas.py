@@ -214,7 +214,7 @@ class Canvas(VisualizationElement):
     ):
         if artist_kwargs is None:
             artist_kwargs = {}
-        locations = agents.locations
+        locations = agents.locations.data
         if isinstance(locations, tuple):
             portrayal = artist(model, agents, **artist_kwargs)
             portrayal["x"] = self.convert_lon_to_x(locations[0], model)
