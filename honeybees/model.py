@@ -8,12 +8,18 @@ import yaml
 
 class Model:
     def __init__(
-        self, current_time, timestep_length, config_path, n_timesteps=None, args=None
+        self,
+        current_time,
+        timestep_length,
+        config_path=None,
+        n_timesteps=None,
+        args=None,
     ):
         self._current_time = current_time
         self.timestep_length = timestep_length
         self.n_timesteps = n_timesteps
-        self.config = self.setup_config(config_path)
+        if config_path is not None:
+            self.config = self.setup_config(config_path)
         self.args = args
         self.logger = self.create_logger()
         self.logger.info("Initializing model")

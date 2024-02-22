@@ -22,6 +22,7 @@ import sys
 from collections.abc import Iterable
 import os
 import numpy as np
+from pathlib import Path
 
 try:
     import cupy as cp
@@ -52,19 +53,12 @@ class Reporter:
         self.variables = {}
         self.timesteps = []
 
-        self.export_folder = self.model.config["general"]["report_folder"]
+        self.export_folder = Path(self.model.config["general"]["report_folder"])
         if subfolder:
-            self.export_folder = os.path.join(self.export_folder, subfolder)
-        self.maybe_create_export_folder()
+            self.export_folder = self.export_folder / subfolder
+        self.export_folder.mkdir(parents=True, exist_ok=True)
 
         self.step()
-
-    def maybe_create_export_folder(self) -> None:
-        """If required, create folder export folder"""
-        try:
-            os.makedirs(self.export_folder)
-        except OSError:
-            pass
 
     def check_value(self, value: Any):
         """Check whether the value is a Python integer or float, and is not infinite.
@@ -134,9 +128,11 @@ class Reporter:
         # check if value is of numpy type and check if size is 1. If so, convert to native python type.
         if isinstance(
             value,
-            (np.ndarray, np.generic, cp.ndarray, cp.generic)
-            if "cupy" in sys.modules
-            else (np.ndarray, np.generic),
+            (
+                (np.ndarray, np.generic, cp.ndarray, cp.generic)
+                if "cupy" in sys.modules
+                else (np.ndarray, np.generic)
+            ),
         ):
             if value.size == 1:
                 value = value.item()
