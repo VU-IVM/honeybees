@@ -43,7 +43,7 @@ class Reporter:
         subfolder: Optional name of the subfolder to be reported in. By default the report folder from the configuration file is used (general:report_folder).
     """
 
-    def __init__(self, model, subfolder: Union[None, str] = None) -> None:
+    def __init__(self, model, folder: str) -> None:
         self.model = model
         if not hasattr(self.model, "agents"):  # ensure agents exist
             raise NameError(
@@ -53,10 +53,7 @@ class Reporter:
         self.variables = {}
         self.timesteps = []
 
-        self.export_folder = Path(self.model.config["general"]["report_folder"])
-        if subfolder:
-            self.export_folder = self.export_folder / subfolder
-        self.export_folder.mkdir(parents=True, exist_ok=True)
+        self.export_folder = folder
 
         self.step()
 
