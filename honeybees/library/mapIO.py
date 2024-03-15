@@ -5,8 +5,6 @@ import datetime
 import numpy as np
 from math import ceil, floor
 import xarray as xr
-import rioxarray
-from netCDF4 import Dataset, num2date
 from honeybees.library.raster import sample_from_map
 import rasterio
 from rasterio import mask
