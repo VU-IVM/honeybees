@@ -34,6 +34,8 @@ def find_neighbors_numba(
     maxy,
     grid,
 ):
+    # TODO: Fix the issue with set type inference in numba. This is only important for
+    # n_neighbor > 20. The current implementation is not efficient for n_neighbor > 20.
     nanvalue = np.iinfo(dtype).max  # use the maximum value of uint as nanvalue
     neighbors = np.full(
         (map_search_source_to_target.size, n_neighbor), nanvalue, dtype=dtype
@@ -72,9 +74,9 @@ def find_neighbors_numba(
                 )
                 if index == n_unique_hashcodes:
                     break
-                search_counts[
-                    search_count_index, 0
-                ] = cumulative_count_per_search_hashcode[index]
+                search_counts[search_count_index, 0] = (
+                    cumulative_count_per_search_hashcode[index]
+                )
                 if search_target_unique_hashcodes[index] == neighbor_geohash:
                     search_counts[search_count_index, 1] += (
                         cumulative_count_per_search_hashcode[index + 1]
@@ -116,8 +118,8 @@ def find_neighbors_numba(
                 )
                 J = n_neighbors - n_neighbor
 
-                if n_neighbor > 20:
-                    selected_agents = set()
+                # if n_neighbor > 20:
+                #     selected_agents = set()
 
                 for i in range(n_neighbor):
                     r = np.random.randint(0, J + 1)
@@ -137,8 +139,32 @@ def find_neighbors_numba(
                             + r
                             - search_counts[neighbor_search_counts_index - 1, 2]
                         )
-                    if n_neighbor > 20:
-                        if neighbor in selected_agents:
+                    # if n_neighbor > 20:
+                    #     if neighbor in selected_agents:
+                    #         r = int(J)
+                    #         if (
+                    #             r >= search_target_agent_index
+                    #         ):  # ensure we do not pick the agent itself and include the last agent
+                    #             r += 1
+                    #         neighbor_search_counts_index = (
+                    #             find_neighbor_search_count_index(
+                    #                 search_counts, search_count_index, r
+                    #             )
+                    #         )
+                    #         if neighbor_search_counts_index == 0:
+                    #             neighbor = (
+                    #                 search_counts[neighbor_search_counts_index, 0] + r
+                    #             )
+                    #         else:
+                    #             neighbor = (
+                    #                 search_counts[neighbor_search_counts_index, 0]
+                    #                 + r
+                    #                 - search_counts[neighbor_search_counts_index - 1, 2]
+                    #             )
+                    #     selected_agents.add(neighbor)
+                    # else:
+                    for k in range(i):
+                        if agent_neighbors[k] == neighbor:
                             r = int(J)
                             if (
                                 r >= search_target_agent_index
@@ -159,42 +185,15 @@ def find_neighbors_numba(
                                     + r
                                     - search_counts[neighbor_search_counts_index - 1, 2]
                                 )
-                        selected_agents.add(neighbor)
-                    else:
-                        for k in range(i):
-                            if agent_neighbors[k] == neighbor:
-                                r = int(J)
-                                if (
-                                    r >= search_target_agent_index
-                                ):  # ensure we do not pick the agent itself and include the last agent
-                                    r += 1
-                                neighbor_search_counts_index = (
-                                    find_neighbor_search_count_index(
-                                        search_counts, search_count_index, r
-                                    )
-                                )
-                                if neighbor_search_counts_index == 0:
-                                    neighbor = (
-                                        search_counts[neighbor_search_counts_index, 0]
-                                        + r
-                                    )
-                                else:
-                                    neighbor = (
-                                        search_counts[neighbor_search_counts_index, 0]
-                                        + r
-                                        - search_counts[
-                                            neighbor_search_counts_index - 1, 2
-                                        ]
-                                    )
-                                break
+                            break
                     agent_neighbors[i] = neighbor
 
                     J += 1
                 for f in range(agent_neighbors.size):
                     if agent_neighbors[f] != nanvalue:
-                        neighbors[
-                            neighbor_index, f
-                        ] = search_target_hashcodes_sort_indices[agent_neighbors[f]]
+                        neighbors[neighbor_index, f] = (
+                            search_target_hashcodes_sort_indices[agent_neighbors[f]]
+                        )
                 agent_neighbors.fill(nanvalue)
         else:
             for neighbor_index_sorted in range(
@@ -216,9 +215,9 @@ def find_neighbors_numba(
                             n += 1
                 for f in range(agent_neighbors.size):
                     if agent_neighbors[f] != nanvalue:
-                        neighbors[
-                            neighbor_index, f
-                        ] = search_target_hashcodes_sort_indices[agent_neighbors[f]]
+                        neighbors[neighbor_index, f] = (
+                            search_target_hashcodes_sort_indices[agent_neighbors[f]]
+                        )
                 agent_neighbors.fill(nanvalue)
     return neighbors
 
