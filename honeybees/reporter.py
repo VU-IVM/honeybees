@@ -148,7 +148,7 @@ class Reporter:
                 f"Save type for {name} in config file must be 'save', 'save+export' or 'export')."
             )
 
-        if conf["save"] == "export" or conf["save"] == "save+export":
+        if conf["save"] == "export":
             if "frequency" in conf and conf["frequency"] is not None:
                 if conf["frequency"] == "initial":
                     if self.model.current_timestep == 0:
@@ -181,7 +181,7 @@ class Reporter:
             else:
                 self.export_value(name, value, conf)
 
-        if conf["save"] == "save" or conf["save"] == "save+export":
+        if conf["save"] == "save":
             try:
                 if isinstance(name, tuple):
                     name, ID = name
