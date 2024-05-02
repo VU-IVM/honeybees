@@ -80,6 +80,8 @@ class Reporter:
             value: The array itself.
             conf: Configuration for saving the file. Contains options such a file format, and whether to export the array in this timestep at all.
         """
+        if value is None:
+            return None
         folder = os.path.join(self.export_folder, name)
         try:
             os.makedirs(folder)
@@ -101,8 +103,6 @@ class Reporter:
         elif conf["format"] == "csv":
             fn += ".csv"
             fp = os.path.join(folder, fn)
-            if isinstance(value, (np.ndarray, cp.ndarray)):
-                value = value.tolist()
             if len(value) > 100_000:
                 self.model.logger.info(
                     f"Exporting {len(value)} items to csv. This might take a long time and take a lot of space. Consider using NumPy (compressed) binary format (npy/npz)."
@@ -139,16 +139,44 @@ class Reporter:
             for v in value:
                 self.check_value(v)
 
-        if "save" not in conf:
-            raise ValueError(
-                f"Save type must be specified for {name} in config file (save/save+export/export)."
-            )
-        if conf["save"] not in ("save", "export", "save+export"):
-            raise ValueError(
-                f"Save type for {name} in config file must be 'save', 'save+export' or 'export')."
-            )
+        if "save" in conf:
+            if conf["save"] not in ("save", "export"):
+                raise ValueError(
+                    f"Save type for {name} in config file must be 'save', 'save+export' or 'export')."
+                )
+            import warnings
 
-        if conf["save"] == "export":
+            warnings.warn(
+                "The `save` option is deprecated and will be removed in future versions. If you use 'save: export' the option can simply be removed (new default). If you use 'save: save', please replace with 'single_file: true'",
+                DeprecationWarning,
+            )
+            if conf["save"] == "save":
+                conf["single_file"] = True
+            del conf["save"]
+
+        if (
+            "single_file" in conf
+            and conf["single_file"] is True
+            and conf["format"] != "netcdf"
+        ):
+            try:
+                if isinstance(name, tuple):
+                    name, ID = name
+                    if name not in self.variables:
+                        self.variables[name] = {}
+                    if ID not in self.variables[name]:
+                        self.variables[name][ID] = []
+                    self.variables[name][ID].append(value)
+                else:
+                    if name not in self.variables:
+                        self.variables[name] = []
+                    self.variables[name].append(value)
+            except KeyError:
+                raise KeyError(
+                    f"Variable {name} not initialized. This likely means that an agent is reporting for a group that was not is not the reporter"
+                )
+
+        else:
             if "frequency" in conf and conf["frequency"] is not None:
                 if conf["frequency"] == "initial":
                     if self.model.current_timestep == 0:
@@ -180,24 +208,6 @@ class Reporter:
                     raise ValueError(f"Frequency {conf['frequency']} not recognized.")
             else:
                 self.export_value(name, value, conf)
-
-        if conf["save"] == "save":
-            try:
-                if isinstance(name, tuple):
-                    name, ID = name
-                    if name not in self.variables:
-                        self.variables[name] = {}
-                    if ID not in self.variables[name]:
-                        self.variables[name][ID] = []
-                    self.variables[name][ID].append(value)
-                else:
-                    if name not in self.variables:
-                        self.variables[name] = []
-                    self.variables[name].append(value)
-            except KeyError:
-                raise KeyError(
-                    f"Variable {name} not initialized. This likely means that an agent is reporting for a group that was not is not the reporter"
-                )
 
     @staticmethod
     @njit
@@ -259,7 +269,7 @@ class Reporter:
             conf: Dictionary with report configuration for values.
         """
         function = conf["function"]
-        if function is None:
+        if function is None or values is None:
             values = deepcopy(
                 values
             )  # need to copy item, because values are passed without applying any a function.
