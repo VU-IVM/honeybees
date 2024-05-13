@@ -210,7 +210,7 @@ class Reporter:
                 self.export_value(name, value, conf)
 
     @staticmethod
-    @njit
+    @njit(cache=True)
     def mean_per_ID(
         values: np.ndarray, group_ids: np.ndarray, n_groups: int
     ) -> np.ndarray:
@@ -236,7 +236,7 @@ class Reporter:
         return sum_per_group / count_per_group
 
     @staticmethod
-    @njit
+    @njit(cache=True)
     def sum_per_ID(
         values: np.ndarray, group_ids: np.ndarray, n_groups: int
     ) -> np.ndarray:

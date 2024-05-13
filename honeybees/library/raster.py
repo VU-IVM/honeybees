@@ -13,7 +13,7 @@ import os
 from typing import Union
 
 
-@njit
+@njit(cache=True)
 def reproject_pixel(
     gt_from: tuple[float, float, float, float, float, float],
     gt_to: tuple[float, float, float, float, float, float],
@@ -33,7 +33,7 @@ def reproject_pixel(
     return int(px_out), int(py_out)
 
 
-@njit
+@njit(cache=True)
 def pixel_to_coord(px: int, py: int, gt: tuple) -> Tuple[float, float]:
     """Converts pixel (x, y) to coordinate (lon, lat) for given geotransformation.
     Uses the upper left corner of the pixel. To use the center, add 0.5 to input pixel.
@@ -76,7 +76,7 @@ def pixels_to_coords(pixels: np.ndarray, gt: tuple) -> np.ndarray:
         raise ValueError("Cannot convert rotated maps")
 
 
-@njit
+@njit(cache=True)
 def coord_to_pixel(
     coord: np.ndarray, gt: tuple[float, float, float, float, float, float]
 ) -> tuple[int, int]:
@@ -159,7 +159,8 @@ def sample_from_map(
 
 
 @njit(
-    parallel=False
+    parallel=False,
+    cache=True,
 )  # Writing to an array cannot be parallelized as race conditions would occur.
 def write_to_array(
     array: np.ndarray,

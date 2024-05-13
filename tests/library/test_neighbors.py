@@ -74,7 +74,7 @@ def test_neighbors_speed(benchmark, n_locations, bits, pytestconfig):
 #     return generate_locations(population, gt[0] + ul[0] * gt[1], gt[3] + lr[1] * gt[5], gt[1], -gt[5]), population.sum()
 
 
-@njit
+@njit(cache=True)
 def generate_locations(population, x_offset, y_offset, x_step, y_step):
     agent_locations = np.empty((population.sum(), 2), dtype=np.float32)
     count = 0
