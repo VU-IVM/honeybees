@@ -160,6 +160,7 @@ class ContinuousVisualization {
 			var img = new Image();
 			img.src = background.img;
 			img.onload = function() {
+				ctx.imageSmoothingEnabled = false; // Disable interpolation
 				ctx.drawImage(img, 0, 0, background.xsize, background.ysize, margin_left, 0, this.map_width, this.map_height);
 				this.draw(objects.slice(1))
 			}.bind(this);
