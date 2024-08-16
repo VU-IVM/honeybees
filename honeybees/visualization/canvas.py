@@ -235,9 +235,9 @@ class Canvas(VisualizationElement):
                 portrayal = artist(model, agents, idx, **artist_kwargs_to_pass)
                 portrayal["x"] = self.convert_lon_to_x(locations[idx, 0], model)
                 portrayal["y"] = self.convert_lat_to_y(locations[idx, 1], model)
-                agent_space_state[
-                    f"{agent_subclass_id}_{idx}"
-                ] = portrayal  # converting to python int, as this is JSON serializable
+                agent_space_state[f"{agent_subclass_id}_{idx}"] = (
+                    portrayal  # converting to python int, as this is JSON serializable
+                )
         else:
             raise ValueError(
                 f"locations property of agent class {type(agents).__name__} must be tuple or (n, 2) Numpy array with locations"
@@ -334,9 +334,11 @@ class Canvas(VisualizationElement):
                 {
                     "type": "background options",
                     "options": background_variables,
-                    "currentselection": model.artists.background_variable
-                    if hasattr(model.artists, "background_variable")
-                    else None,
+                    "currentselection": (
+                        model.artists.background_variable
+                        if hasattr(model.artists, "background_variable")
+                        else None
+                    ),
                 }
             )
 
