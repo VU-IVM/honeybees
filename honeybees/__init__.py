@@ -8,10 +8,6 @@ Submodules
 """
 
 __title__ = "honeybees"
-__version__ = 0.1
+__version__ = 1.0.3
 __email__ = "j.a.debruijn at outlook com"
 __status__ = "development"
-
-from numba import config
-
-config.THREADING_LAYER = "safe"  # set threading mode for numba to safe, requires tbb
