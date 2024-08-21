@@ -55,7 +55,7 @@ class People(AgentBaseClass):
             maxx=self.model.xmax,
             maxy=self.model.ymax,
             grid="orthogonal",
-            search_ids=np.where(self.infected == True)[0],
+            search_ids=np.where(self.infected)[0],
         ).ravel()
         neighbors = neighbors[neighbors != -1]
         to_infect = neighbors[~self.vaccinated[neighbors]]

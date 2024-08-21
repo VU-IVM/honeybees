@@ -39,6 +39,8 @@ class People(AgentBaseClass):
     def step(self):
         values_from_array = sample_from_map(MAP, self.locations, MAP_GEOTRANSFORM)
         values_from_GTiff = self.data.sample_coords(self.locations)
+        print(values_from_array)
+        print(values_from_GTiff)
 
 
 class Agents(AgentBaseClass):

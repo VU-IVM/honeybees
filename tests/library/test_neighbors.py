@@ -1,14 +1,10 @@
 # -*- coding: utf-8 -*-
 import numpy as np
-import matplotlib.pyplot as plt
 import pytest
-import os
-import numpy as np
 from numba import njit
 
 import matplotlib.patches as mpatches
 from honeybees.library import geohash
-from honeybees.library.raster import coord_to_pixel
 from honeybees.library.neighbors import find_neighbors
 
 

@@ -1,7 +1,6 @@
 # -*- coding: utf-8 -*-
 from datetime import timedelta
 from dateutil.relativedelta import relativedelta
-from time import time
 import logging
 import yaml
 
@@ -203,13 +202,13 @@ class Model:
 
         assert isinstance(n, int) and n > 0
         for _ in range(n):
-            t0 = time()
+            # t0 = time()
             # print('Simulating agent behavior')
             self.agents.step()
-            t1 = time()
+            # t1 = time()
             if report:
                 self.reporter.step()
-            t2 = time()
+            # t2 = time()
             # print('\tstep time', t1- t0)
             # print('\treport time', t2 - t1)
 

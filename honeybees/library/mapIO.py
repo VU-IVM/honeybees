@@ -30,10 +30,6 @@ class Reader:
         """Get Geotransformation of the source file. Must be implemented in the child class."""
         raise NotImplementedError
 
-    def get_data_array(self) -> None:
-        """Read data array. Must be implemented in child class."""
-        raise NotImplementedError
-
     def set_window_and_gt(self) -> None:
         """This function gets the geotransformation (gt) of the cut map, and the rows to read from the original data (rowslice, colslice)."""
         gt_ds = self.get_source_gt()

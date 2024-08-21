@@ -1,6 +1,5 @@
 # -*- coding: utf-8 -*-
 import math
-from typing import Type
 from honeybees.visualization.ModularVisualization import VisualizationElement
 import numpy as np
 from PIL import Image
@@ -175,11 +174,11 @@ class Canvas(VisualizationElement):
                     if isinstance(geojsons, (list, tuple)):
                         for geojson in geojsons:
                             assert isinstance(geojson, dict)
-                            if not "properties" in geojson:
+                            if "properties" not in geojson:
                                 raise ValueError(
                                     f"Geojson for {name} has not properties"
                                 )
-                            if not "id" in geojson["properties"]:
+                            if "id" not in geojson["properties"]:
                                 raise ValueError(f"Geojson for {name} has not ID")
                             ID = geojson["properties"]["id"]
                             if ID in used_IDs:

@@ -23,7 +23,6 @@ import sys
 from collections.abc import Iterable
 import os
 import numpy as np
-from pathlib import Path
 
 try:
     import cupy as cp
