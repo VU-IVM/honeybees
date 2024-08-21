@@ -6,6 +6,7 @@ Chart Module
 Module for drawing live-updating line charts using Charts.js
 
 """
+
 import json
 import matplotlib.pyplot as plt
 import matplotlib.colors as mcolors

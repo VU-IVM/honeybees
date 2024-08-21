@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
-"""Submodule that implements several functions for geohashing. Inspired by https://www.factual.com/blog/how-geohashes-work/.
-"""
+"""Submodule that implements several functions for geohashing. Inspired by https://www.factual.com/blog/how-geohashes-work/."""
+
 import numpy as np
 import numba as nb
 from numba import njit, prange

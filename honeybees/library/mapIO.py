@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
-"""Submodule that implements several classes for reading maps (image type and NetCDF type).
-"""
+"""Submodule that implements several classes for reading maps (image type and NetCDF type)."""
+
 import datetime
 import numpy as np
 from math import ceil, floor

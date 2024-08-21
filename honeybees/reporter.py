@@ -18,6 +18,7 @@ In the configuration file you can specify which data should be reported. In this
         - ...
         - ...
 """
+
 import sys
 from collections.abc import Iterable
 import os
