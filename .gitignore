@@ -4,6 +4,8 @@ tests/plots/
 tests/benchmarks/
 tests/files/
 report/
+.ruff_cache
+.benchmarks
 
 # Byte-compiled / optimized / DLL files
 __pycache__/

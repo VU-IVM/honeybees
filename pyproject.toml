@@ -46,10 +46,11 @@ docs = [
     "sphinx-autodoc-typehints",
     "sphinxcontrib-autoprogram",
 ]
-tests = [
+dev = [
     "matplotlib", 
     "pytest", 
     "pytest-plt", 
     "pytest-benchmark", 
-    "cartopy"
+    "cartopy",
+    "ruff",
 ]
