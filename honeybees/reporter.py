@@ -145,34 +145,11 @@ class Reporter:
         """
         if value is None:
             return None
-        folder = os.path.join(self.export_folder, name)
-        try:
-            os.makedirs(folder)
-        except OSError:
-            pass
         if "format" not in conf:
             raise ValueError(
                 f"Export format must be specified for {name} in config file (npy/npz/csv/xlsx)."
             )
-        fn = f"{self.timesteps[-1].isoformat().replace('-', '').replace(':', '')}"
-        if conf["format"] == "npy":
-            fn += ".npy"
-            fp = os.path.join(folder, fn)
-            np.save(fp, value)
-        elif conf["format"] == "npz":
-            fn += ".npz"
-            fp = os.path.join(folder, fn)
-            np.savez_compressed(fp, data=value)
-        elif conf["format"] == "csv":
-            fn += ".csv"
-            fp = os.path.join(folder, fn)
-            if len(value) > 100_000:
-                self.model.logger.info(
-                    f"Exporting {len(value)} items to csv. This might take a long time and take a lot of space. Consider using NumPy (compressed) binary format (npy/npz)."
-                )
-            with open(fp, "w") as f:
-                f.write("\n".join([str(v) for v in value]))
-        elif conf["format"] == "zarr":
+        if conf["format"] == "zarr":
             ds = conf["_file"]
             if name not in ds:
                 if isinstance(value, (float, int)):
@@ -195,7 +172,28 @@ class Reporter:
             index = conf["_time_index"].index(self.model.current_time)
             ds[name][index] = value
         else:
-            raise ValueError(f"{conf['format']} not recognized")
+            folder = os.path.join(self.export_folder, name)
+            os.makedirs(folder, exist_ok=True)
+            fn = f"{self.timesteps[-1].isoformat().replace('-', '').replace(':', '')}"
+            if conf["format"] == "npy":
+                fn += ".npy"
+                fp = os.path.join(folder, fn)
+                np.save(fp, value)
+            elif conf["format"] == "npz":
+                fn += ".npz"
+                fp = os.path.join(folder, fn)
+                np.savez_compressed(fp, data=value)
+            elif conf["format"] == "csv":
+                fn += ".csv"
+                fp = os.path.join(folder, fn)
+                if len(value) > 100_000:
+                    self.model.logger.info(
+                        f"Exporting {len(value)} items to csv. This might take a long time and take a lot of space. Consider using NumPy (compressed) binary format (npy/npz)."
+                    )
+                with open(fp, "w") as f:
+                    f.write("\n".join([str(v) for v in value]))
+            else:
+                raise ValueError(f"{conf['format']} not recognized")
 
     def report_value(
         self, name: Union[str, tuple[str, Any]], value: Any, conf: dict
