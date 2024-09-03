@@ -32,7 +32,42 @@ import pandas as pd
 from numba import njit
 from math import isinf
 from copy import deepcopy
+import zarr
+from numcodecs import Blosc
 from typing import Union, Any
+
+zstd_compressor = Blosc(cname="zstd", clevel=3, shuffle=Blosc.BITSHUFFLE)
+
+
+def create_time_array(start, end, timestep, conf):
+    if "frequency" not in conf:
+        frequency = {"every": "day"}
+    else:
+        frequency = conf["frequency"]
+    if "every" in frequency:
+        every = frequency["every"]
+        time = []
+        current_time = start
+        while current_time <= end:
+            if every == "year":
+                if (
+                    frequency["month"] == current_time.month
+                    and frequency["day"] == current_time.day
+                ):
+                    time.append(current_time)
+            elif every == "month":
+                if frequency["day"] == current_time.day:
+                    time.append(current_time)
+            elif every == "day":
+                time.append(current_time)
+            current_time += timestep
+        return time
+    elif frequency == "initial":
+        return [start]
+    elif frequency == "final":
+        return [end]
+    else:
+        raise ValueError(f"Frequency {frequency} not recognized.")
 
 
 class Reporter:
@@ -52,8 +87,36 @@ class Reporter:
 
         self.variables = {}
         self.timesteps = []
-
         self.export_folder = folder
+
+        if (
+            self.model.config is not None
+            and "report" in self.model.config
+            and self.model.config["report"] is not None
+        ):
+            self.report = True
+            for name, conf in self.model.config["report"].items():
+                if conf["format"] == "zarr":
+                    filepath = os.path.join(self.export_folder, name + ".zarr.zip")
+                    ds = zarr.open_group(filepath, mode="w")
+
+                    time = create_time_array(
+                        start=self.model.current_time,
+                        end=self.model.end_time,
+                        timestep=self.model.timestep_length,
+                        conf=conf,
+                    )
+
+                    ds.create_dataset(
+                        "time",
+                        data=time,
+                        dtype="datetime64[ns]",
+                    )
+
+                    conf["_file"] = ds
+                    conf["_time_index"] = time
+        else:
+            self.report = False
 
         self.step()
 
@@ -109,6 +172,28 @@ class Reporter:
                 )
             with open(fp, "w") as f:
                 f.write("\n".join([str(v) for v in value]))
+        elif conf["format"] == "zarr":
+            ds = conf["_file"]
+            if name not in ds:
+                if isinstance(value, (float, int)):
+                    shape = (ds["time"].size,)
+                    chunks = (1,)
+                    compressor = None
+                    dtype = type(value)
+                else:
+                    shape = (ds["time"].size, value.size)
+                    chunks = (1, value.size)
+                    compressor = zstd_compressor
+                    dtype = value.dtype
+                ds.create_dataset(
+                    name,
+                    shape=shape,
+                    chunks=chunks,
+                    dtype=dtype,
+                    compressor=compressor,
+                )
+            index = conf["_time_index"].index(self.model.current_time)
+            ds[name][index] = value
         else:
             raise ValueError(f"{conf['format']} not recognized")
 
@@ -157,7 +242,7 @@ class Reporter:
         if (
             "single_file" in conf
             and conf["single_file"] is True
-            and conf["format"] != "netcdf"
+            and conf["format"] != "zarr"  # for zarr, we always save per timestep
         ):
             try:
                 if isinstance(name, tuple):
@@ -320,11 +405,7 @@ class Reporter:
     def step(self) -> None:
         """This method is called every timestep. First appends the current model time to the list of times for the reporter. Then iterates through the data to be reported on and calls the extract_agent_data method for each of them."""
         self.timesteps.append(self.model.current_time)
-        if (
-            self.model.config is not None
-            and "report" in self.model.config
-            and self.model.config["report"] is not None
-        ):
+        if self.report:
             for name, conf in self.model.config["report"].items():
                 self.extract_agent_data(name, conf)
 

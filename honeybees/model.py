@@ -92,6 +92,14 @@ class Model:
         """
         return self._current_time
 
+    @property
+    def end_time(self):
+        """
+        Returns:
+            datetime.datetime: end time of the model
+        """
+        return self._current_time + self.n_timesteps * self.timestep_length
+
     @current_time.setter
     def current_time(self, v):
         self._current_time = v

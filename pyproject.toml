@@ -36,6 +36,7 @@ dependencies = [
     "matplotlib",
     "xarray",
     "rioxarray",
+    "zarr",
 ]
 
 [project.optional-dependencies]
