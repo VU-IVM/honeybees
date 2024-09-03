@@ -94,7 +94,7 @@ class Reporter:
             and "report" in self.model.config
             and self.model.config["report"] is not None
         ):
-            self.report = True
+            self.enabled = True
             for name, conf in self.model.config["report"].items():
                 if conf["format"] == "zarr":
                     filepath = os.path.join(self.export_folder, name + ".zarr.zip")
@@ -116,7 +116,7 @@ class Reporter:
                     conf["_file"] = ds
                     conf["_time_index"] = time
         else:
-            self.report = False
+            self.enabled = False
 
         self.step()
 
@@ -405,7 +405,7 @@ class Reporter:
     def step(self) -> None:
         """This method is called every timestep. First appends the current model time to the list of times for the reporter. Then iterates through the data to be reported on and calls the extract_agent_data method for each of them."""
         self.timesteps.append(self.model.current_time)
-        if self.report:
+        if self.enabled:
             for name, conf in self.model.config["report"].items():
                 self.extract_agent_data(name, conf)
 
