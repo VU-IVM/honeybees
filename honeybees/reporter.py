@@ -112,6 +112,7 @@ class Reporter:
                         data=time,
                         dtype="datetime64[ns]",
                     )
+                    ds["time"].attrs["_ARRAY_DIMENSIONS"] = ["time"]
 
                     conf["_file"] = ds
                     conf["_time_index"] = time
@@ -157,11 +158,13 @@ class Reporter:
                     chunks = (1,)
                     compressor = None
                     dtype = type(value)
+                    array_dimensions = ["time"]
                 else:
                     shape = (ds["time"].size, value.size)
                     chunks = (1, value.size)
                     compressor = zstd_compressor
                     dtype = value.dtype
+                    array_dimensions = ["time", "agents"]
                 ds.create_dataset(
                     name,
                     shape=shape,
@@ -169,6 +172,7 @@ class Reporter:
                     dtype=dtype,
                     compressor=compressor,
                 )
+                ds[name].attrs["_ARRAY_DIMENSIONS"] = array_dimensions
             index = conf["_time_index"].index(self.model.current_time)
             ds[name][index] = value
         else:
