@@ -165,12 +165,21 @@ class Reporter:
                     compressor = zstd_compressor
                     dtype = value.dtype
                     array_dimensions = ["time", "agents"]
+                if dtype in (float, np.float32, np.float64):
+                    fill_value = np.nan
+                elif dtype in (int, np.int32, np.int64):
+                    fill_value = -1
+                else:
+                    raise ValueError(
+                        f"Value {dtype} of type {type(dtype)} not recognized."
+                    )
                 ds.create_dataset(
                     name,
                     shape=shape,
                     chunks=chunks,
                     dtype=dtype,
                     compressor=compressor,
+                    fill_value=fill_value,
                 )
                 ds[name].attrs["_ARRAY_DIMENSIONS"] = array_dimensions
             index = conf["_time_index"].index(self.model.current_time)
