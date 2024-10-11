@@ -20,6 +20,7 @@ In the configuration file you can specify which data should be reported. In this
 """
 
 import sys
+import re
 from collections.abc import Iterable
 import os
 import numpy as np
@@ -400,13 +401,23 @@ class Reporter:
             conf: Dictionary with report configuration for values.
         """
         agents = getattr(self.model.agents, conf["type"])
+        varname = conf["varname"]
+        fancy_index = re.search(r"\[.*?\]", varname)
+        if fancy_index:
+            fancy_index = fancy_index.group(0)
+            varname = varname.replace(fancy_index, "")
+
         try:
-            values = eval(f"agents.{conf['varname']}")
+            values = getattr(agents, varname)
         except AttributeError:
             print(
-                f"Trying to export '{conf['varname']}', but no such attribute exists for agent type '{conf['type']}'"
+                f"Trying to export '{varname}', but no such attribute exists for agent type '{conf['type']}'"
             )
             values = None
+
+        if fancy_index:
+            values = eval(f"values{fancy_index}")
+
         if "split" in conf and conf["split"]:
             for ID, admin_values in zip(agents.ids, values):
                 self.parse_agent_data((name, ID), admin_values, agents, conf)
