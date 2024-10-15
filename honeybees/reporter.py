@@ -219,18 +219,6 @@ class Reporter:
             value: The array itself.
             conf: Configuration for saving the file. Contains options such a file format, and whether to export the data or save the data in the model.
         """
-        # check if value is of numpy type and check if size is 1. If so, convert to native python type.
-        if isinstance(
-            value,
-            (
-                (np.ndarray, np.generic, cp.ndarray, cp.generic)
-                if "cupy" in sys.modules
-                else (np.ndarray, np.generic)
-            ),
-        ):
-            if value.size == 1:
-                value = value.item()
-                self.check_value(value)
         if isinstance(value, list):
             value = [v.item() for v in value]
             for v in value:
