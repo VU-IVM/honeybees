@@ -184,6 +184,16 @@ class Reporter:
                 )
                 ds[name].attrs["_ARRAY_DIMENSIONS"] = array_dimensions
             index = conf["_time_index"].index(self.model.current_time)
+            if value.size < ds[name][index].size:
+                print("Padding array with NaNs or -1 - temporary solution")
+                value = np.pad(
+                    value,
+                    (0, ds[name][index].size - value.size),
+                    mode="constant",
+                    constant_values=np.nan
+                    if value.dtype in (float, np.float32, np.float64)
+                    else -1,
+                )
             ds[name][index] = value
         else:
             folder = os.path.join(self.export_folder, name)
