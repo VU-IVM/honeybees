@@ -53,7 +53,7 @@ def pixel_to_coord(px: int, py: int, gt: tuple) -> Tuple[float, float]:
         raise ValueError("Cannot convert rotated maps")
 
 
-@njit(parallel=True)
+@njit(cache=True, parallel=True)
 def pixels_to_coords(pixels: np.ndarray, gt: tuple) -> np.ndarray:
     """Converts pixels (x, y) to coordinates (lon, lat) for given geotransformation.
     Uses the upper left corner of the pixels. To use the centers, add 0.5 to input pixels.
