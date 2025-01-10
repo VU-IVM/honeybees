@@ -19,17 +19,12 @@ In the configuration file you can specify which data should be reported. In this
         - ...
 """
 
-import sys
 import re
 from collections.abc import Iterable
 import os
 import numpy as np
-
-try:
-    import cupy as cp
-except (ModuleNotFoundError, ImportError):
-    pass
 import pandas as pd
+from operator import attrgetter
 from numba import njit
 from math import isinf
 from copy import deepcopy
@@ -398,7 +393,7 @@ class Reporter:
             name: Name of the data to report.
             conf: Dictionary with report configuration for values.
         """
-        agents = getattr(self.model.agents, conf["type"])
+        agents = attrgetter(conf["type"])(self.model.agents)
         varname = conf["varname"]
         fancy_index = re.search(r"\[.*?\]", varname)
         if fancy_index:
