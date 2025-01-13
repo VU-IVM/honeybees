@@ -14,7 +14,7 @@ class Model:
         n_timesteps=None,
         args=None,
     ):
-        self._current_time = current_time
+        self.start_time = current_time
         self.timestep_length = timestep_length
         self.n_timesteps = n_timesteps
         if config_path is not None:
@@ -90,7 +90,7 @@ class Model:
         Returns:
             datetime.datetime: current model time
         """
-        return self._current_time
+        return self.start_time + self.current_timestep * self.timestep_length
 
     @property
     def end_time(self):
@@ -99,10 +99,6 @@ class Model:
             datetime.datetime: end time of the model
         """
         return self._current_time + self.n_timesteps * self.timestep_length
-
-    @current_time.setter
-    def current_time(self, v):
-        self._current_time = v
 
     @property
     def current_timestep(self):
@@ -205,7 +201,6 @@ class Model:
             n = self.parse_step_str(step_size)
         else:
             n = step_size
-        self.current_time += self.timestep_length
         self.current_timestep += 1
 
         assert isinstance(n, int) and n > 0
