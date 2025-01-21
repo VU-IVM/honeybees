@@ -213,7 +213,7 @@ class Canvas(VisualizationElement):
     ):
         if artist_kwargs is None:
             artist_kwargs = {}
-        locations = agents.locations.data
+        locations = agents.var.locations.data
         if isinstance(locations, tuple):
             portrayal = artist(model, agents, **artist_kwargs)
             portrayal["x"] = self.convert_lon_to_x(locations[0], model)
@@ -250,7 +250,7 @@ class Canvas(VisualizationElement):
             for agent_type, artist_kwargs in model.config["draw"][
                 "draw_agents"
             ].items():
-                artist_name = f'draw_{agent_type.replace(".", "_")}'
+                artist_name = f"draw_{agent_type.replace('.', '_')}"
                 try:
                     artist = getattr(model.artists, artist_name)
                 except AttributeError:
