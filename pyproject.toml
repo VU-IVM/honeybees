@@ -28,7 +28,7 @@ dependencies = [
     "openpyxl",
     "geopandas",
     "numpy",
-    "numba",
+    "numba>=0.61.0",
     "tornado",
     "python-dateutil",
     "rasterio",
