@@ -228,6 +228,9 @@ class Reporter:
             value = [v.item() for v in value]
             for v in value:
                 self.check_value(v)
+        elif np.isscalar(value):
+            value = value.item()
+            self.check_value(value)
 
         if "save" in conf:
             if conf["save"] not in ("save", "export"):
