@@ -275,7 +275,9 @@ class Reporter:
                     if self.model.current_timestep == 0:
                         self.export_value(name, value, conf)
                 elif conf["frequency"] == "final":
-                    if self.model.current_timestep == self.model.n_timesteps:
+                    if (
+                        self.model.current_timestep == self.model.n_timesteps - 1
+                    ):  # timestep is 0-indexed, so n_timesteps - 1 is the last timestep
                         self.export_value(name, value, conf)
                 elif "every" in conf["frequency"]:
                     every = conf["frequency"]["every"]

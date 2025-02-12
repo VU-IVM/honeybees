@@ -98,7 +98,7 @@ class Model:
         Returns:
             datetime.datetime: end time of the model
         """
-        return self.current_time + self.n_timesteps * self.timestep_length
+        return self.start_time + (self.n_timesteps - 1) * self.timestep_length
 
     @property
     def current_timestep(self):
