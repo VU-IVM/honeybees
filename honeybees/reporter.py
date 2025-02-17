@@ -31,6 +31,7 @@ from copy import deepcopy
 import zarr
 from numcodecs import Blosc
 from typing import Union, Any
+import warnings
 
 zstd_compressor = Blosc(cname="zstd", clevel=3, shuffle=Blosc.BITSHUFFLE)
 
@@ -237,7 +238,6 @@ class Reporter:
                 raise ValueError(
                     f"Save type for {name} in config file must be 'save', 'save+export' or 'export')."
                 )
-            import warnings
 
             warnings.warn(
                 "The `save` option is deprecated and will be removed in future versions. If you use 'save: export' the option can simply be removed (new default). If you use 'save: save', please replace with 'single_file: true'",
@@ -429,7 +429,7 @@ class Reporter:
             for name, conf in self.model.config["report"].items():
                 self.extract_agent_data(name, conf)
 
-    def report(self) -> dict:
+    def finalize(self) -> dict:
         """This method can be called to save the data that is currently saved in memory to disk."""
         report_dict = {}
         for name, values in self.variables.items():
@@ -459,3 +459,9 @@ class Reporter:
             else:
                 raise ValueError(f"save_to format {export_format} unknown")
         return report_dict
+
+    def report(self, *args, **kwargs):
+        warnings.warn(
+            "The `report` method is deprecated and will be removed in future versions. Please use the `finalize` method instead."
+        )
+        self.finalize()
