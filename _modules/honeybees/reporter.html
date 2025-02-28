@@ -1,0 +1,620 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="../../">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>honeybees.reporter &mdash; Honeybees 0.1 documentation</title>
+      <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=5dd5ad26" />
+      <link rel="stylesheet" type="text/css" href="../../_static/css/theme.css?v=e59714d7" />
+
+  
+      <script src="../../_static/jquery.js?v=5be48651"></script>
+      <script src="../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="../../_static/documentation_options.js?v=27b9c81c"></script>
+      <script src="../../_static/doctools.js?v=695de88e"></script>
+      <script src="../../_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" />
+    <link rel="copyright" title="Copyright" href="../../copyright.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../../index.html" class="icon icon-home">
+            Honeybees
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">General</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../introduction.html">Introduction</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../installation.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../model.html">Model</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../agent_agent_interaction.html">Agent-agent interaction</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../agent_environment_interaction.html">Agent-environment interaction</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../visualisation.html">Visualisation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../artists.html">Artists</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../reporting.html">Reporting</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../command_line_args.html">Command line arguments</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Library</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../library/mapIO.html">MapIO</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../library/raster.html">Raster</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../library/geohash.html">Geohash</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../library/neighbors.html">Neighbors</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../library/math.html">Math</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../library/helpers.html">Helpers</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">About</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../authors_page.html">Authors</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../index.html">Honeybees</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="../index.html">Module code</a></li>
+      <li class="breadcrumb-item active">honeybees.reporter</li>
+      <li class="wy-breadcrumbs-aside">
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <h1>Source code for honeybees.reporter</h1><div class="highlight"><pre>
+<span></span><span class="c1"># -*- coding: utf-8 -*-</span>
+<span class="sd">&quot;&quot;&quot;This module is used to report data to the disk and to extract data for visualisation. After initialization of the reporter in the model, the :meth:`honeybees.report.Reporter.step` method is called every timestep, which can obtain data from the agents, and report to disk or save the data for visualiation or writing to disk once the model is finished. The variables to be reported can be configured in the config file. All data is saved to the report folder by default.</span>
+
+<span class="sd">In the configuration file you can specify which data should be reported. In this file you can configure which data should be saved from the model in the `report` folder. This should be formatted as follows:</span>
+
+<span class="sd"> - **report**:</span>
+<span class="sd">    - **name**: name of the folder to which the data is saved.</span>
+<span class="sd">        - **type**: agent type e.g., farmer. Should be identical to attribute name in Agents class.</span>
+<span class="sd">        - **function**: whether to use a function to parse the data. &#39;null&#39; means the data is saved literally, &#39;mean&#39; takes the mean etc. Options are sum/mean.</span>
+<span class="sd">        - **varname**: attribute name of variable in agent class.</span>
+<span class="sd">        - **format**: format to save to. Can be &#39;csv&#39; to save to csv-file per timestep, &#39;npy&#39; to save in NumPy binary format, or &#39;npz&#39; to save in NumPy compressed binary format.</span>
+<span class="sd">        - **initial_only**: if true only save the data for the first timestep.</span>
+<span class="sd">        - **save**: save variable in model run, or export, or both (save/save+export/export).</span>
+<span class="sd">    - **name2**:</span>
+<span class="sd">        - ...</span>
+<span class="sd">        - ...</span>
+<span class="sd">    - **...**:</span>
+<span class="sd">        - ...</span>
+<span class="sd">        - ...</span>
+<span class="sd">&quot;&quot;&quot;</span>
+
+<span class="kn">import</span><span class="w"> </span><span class="nn">re</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">collections.abc</span><span class="w"> </span><span class="kn">import</span> <span class="n">Iterable</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">os</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">numpy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">np</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">pandas</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">pd</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">operator</span><span class="w"> </span><span class="kn">import</span> <span class="n">attrgetter</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">numba</span><span class="w"> </span><span class="kn">import</span> <span class="n">njit</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">math</span><span class="w"> </span><span class="kn">import</span> <span class="n">isinf</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">copy</span><span class="w"> </span><span class="kn">import</span> <span class="n">deepcopy</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">zarr</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">numcodecs</span><span class="w"> </span><span class="kn">import</span> <span class="n">Blosc</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">typing</span><span class="w"> </span><span class="kn">import</span> <span class="n">Union</span><span class="p">,</span> <span class="n">Any</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">warnings</span>
+
+<span class="n">zstd_compressor</span> <span class="o">=</span> <span class="n">Blosc</span><span class="p">(</span><span class="n">cname</span><span class="o">=</span><span class="s2">&quot;zstd&quot;</span><span class="p">,</span> <span class="n">clevel</span><span class="o">=</span><span class="mi">3</span><span class="p">,</span> <span class="n">shuffle</span><span class="o">=</span><span class="n">Blosc</span><span class="o">.</span><span class="n">BITSHUFFLE</span><span class="p">)</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">create_time_array</span><span class="p">(</span><span class="n">start</span><span class="p">,</span> <span class="n">end</span><span class="p">,</span> <span class="n">timestep</span><span class="p">,</span> <span class="n">conf</span><span class="p">):</span>
+    <span class="k">if</span> <span class="s2">&quot;frequency&quot;</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">conf</span><span class="p">:</span>
+        <span class="n">frequency</span> <span class="o">=</span> <span class="p">{</span><span class="s2">&quot;every&quot;</span><span class="p">:</span> <span class="s2">&quot;day&quot;</span><span class="p">}</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">frequency</span> <span class="o">=</span> <span class="n">conf</span><span class="p">[</span><span class="s2">&quot;frequency&quot;</span><span class="p">]</span>
+    <span class="k">if</span> <span class="s2">&quot;every&quot;</span> <span class="ow">in</span> <span class="n">frequency</span><span class="p">:</span>
+        <span class="n">every</span> <span class="o">=</span> <span class="n">frequency</span><span class="p">[</span><span class="s2">&quot;every&quot;</span><span class="p">]</span>
+        <span class="n">time</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="n">current_time</span> <span class="o">=</span> <span class="n">start</span>
+        <span class="k">while</span> <span class="n">current_time</span> <span class="o">&lt;=</span> <span class="n">end</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">every</span> <span class="o">==</span> <span class="s2">&quot;year&quot;</span><span class="p">:</span>
+                <span class="k">if</span> <span class="p">(</span>
+                    <span class="n">frequency</span><span class="p">[</span><span class="s2">&quot;month&quot;</span><span class="p">]</span> <span class="o">==</span> <span class="n">current_time</span><span class="o">.</span><span class="n">month</span>
+                    <span class="ow">and</span> <span class="n">frequency</span><span class="p">[</span><span class="s2">&quot;day&quot;</span><span class="p">]</span> <span class="o">==</span> <span class="n">current_time</span><span class="o">.</span><span class="n">day</span>
+                <span class="p">):</span>
+                    <span class="n">time</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">current_time</span><span class="p">)</span>
+            <span class="k">elif</span> <span class="n">every</span> <span class="o">==</span> <span class="s2">&quot;month&quot;</span><span class="p">:</span>
+                <span class="k">if</span> <span class="n">frequency</span><span class="p">[</span><span class="s2">&quot;day&quot;</span><span class="p">]</span> <span class="o">==</span> <span class="n">current_time</span><span class="o">.</span><span class="n">day</span><span class="p">:</span>
+                    <span class="n">time</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">current_time</span><span class="p">)</span>
+            <span class="k">elif</span> <span class="n">every</span> <span class="o">==</span> <span class="s2">&quot;day&quot;</span><span class="p">:</span>
+                <span class="n">time</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">current_time</span><span class="p">)</span>
+            <span class="n">current_time</span> <span class="o">+=</span> <span class="n">timestep</span>
+        <span class="k">return</span> <span class="n">time</span>
+    <span class="k">elif</span> <span class="n">frequency</span> <span class="o">==</span> <span class="s2">&quot;initial&quot;</span><span class="p">:</span>
+        <span class="k">return</span> <span class="p">[</span><span class="n">start</span><span class="p">]</span>
+    <span class="k">elif</span> <span class="n">frequency</span> <span class="o">==</span> <span class="s2">&quot;final&quot;</span><span class="p">:</span>
+        <span class="k">return</span> <span class="p">[</span><span class="n">end</span><span class="p">]</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Frequency </span><span class="si">{</span><span class="n">frequency</span><span class="si">}</span><span class="s2"> not recognized.&quot;</span><span class="p">)</span>
+
+
+<div class="viewcode-block" id="Reporter">
+<a class="viewcode-back" href="../../reporting.html#honeybees.reporter.Reporter">[docs]</a>
+<span class="k">class</span><span class="w"> </span><span class="nc">Reporter</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;This class is used to report data to disk or for visualisation. The `step` method is called each timestep from the model.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        model: The model.</span>
+<span class="sd">        subfolder: Optional name of the subfolder to be reported in. By default the report folder from the configuration file is used (general:report_folder).</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">model</span><span class="p">,</span> <span class="n">folder</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">model</span> <span class="o">=</span> <span class="n">model</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="nb">hasattr</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">model</span><span class="p">,</span> <span class="s2">&quot;agents&quot;</span><span class="p">):</span>  <span class="c1"># ensure agents exist</span>
+            <span class="k">raise</span> <span class="ne">NameError</span><span class="p">(</span>
+                <span class="s2">&quot;Attribute agents of model does not exists. This most likely means that the reporter was created before the agents.&quot;</span>
+            <span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">variables</span> <span class="o">=</span> <span class="p">{}</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">timesteps</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">export_folder</span> <span class="o">=</span> <span class="n">folder</span>
+
+        <span class="k">if</span> <span class="p">(</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">model</span><span class="o">.</span><span class="n">config</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span>
+            <span class="ow">and</span> <span class="s2">&quot;report&quot;</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">model</span><span class="o">.</span><span class="n">config</span>
+            <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">model</span><span class="o">.</span><span class="n">config</span><span class="p">[</span><span class="s2">&quot;report&quot;</span><span class="p">]</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span>
+        <span class="p">):</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">enabled</span> <span class="o">=</span> <span class="kc">True</span>
+            <span class="k">for</span> <span class="n">name</span><span class="p">,</span> <span class="n">conf</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">model</span><span class="o">.</span><span class="n">config</span><span class="p">[</span><span class="s2">&quot;report&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+                <span class="k">if</span> <span class="n">conf</span><span class="p">[</span><span class="s2">&quot;format&quot;</span><span class="p">]</span> <span class="o">==</span> <span class="s2">&quot;zarr&quot;</span><span class="p">:</span>
+                    <span class="n">filepath</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">export_folder</span><span class="p">,</span> <span class="n">name</span> <span class="o">+</span> <span class="s2">&quot;.zarr.zip&quot;</span><span class="p">)</span>
+                    <span class="n">ds</span> <span class="o">=</span> <span class="n">zarr</span><span class="o">.</span><span class="n">open_group</span><span class="p">(</span><span class="n">filepath</span><span class="p">,</span> <span class="n">mode</span><span class="o">=</span><span class="s2">&quot;w&quot;</span><span class="p">)</span>
+
+                    <span class="n">time</span> <span class="o">=</span> <span class="n">create_time_array</span><span class="p">(</span>
+                        <span class="n">start</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">model</span><span class="o">.</span><span class="n">current_time</span><span class="p">,</span>
+                        <span class="n">end</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">model</span><span class="o">.</span><span class="n">end_time</span><span class="p">,</span>
+                        <span class="n">timestep</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">model</span><span class="o">.</span><span class="n">timestep_length</span><span class="p">,</span>
+                        <span class="n">conf</span><span class="o">=</span><span class="n">conf</span><span class="p">,</span>
+                    <span class="p">)</span>
+
+                    <span class="n">ds</span><span class="o">.</span><span class="n">create_dataset</span><span class="p">(</span>
+                        <span class="s2">&quot;time&quot;</span><span class="p">,</span>
+                        <span class="n">data</span><span class="o">=</span><span class="n">time</span><span class="p">,</span>
+                        <span class="n">dtype</span><span class="o">=</span><span class="s2">&quot;datetime64[ns]&quot;</span><span class="p">,</span>
+                    <span class="p">)</span>
+                    <span class="n">ds</span><span class="p">[</span><span class="s2">&quot;time&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">attrs</span><span class="p">[</span><span class="s2">&quot;_ARRAY_DIMENSIONS&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="p">[</span><span class="s2">&quot;time&quot;</span><span class="p">]</span>
+
+                    <span class="n">conf</span><span class="p">[</span><span class="s2">&quot;_file&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">ds</span>
+                    <span class="n">conf</span><span class="p">[</span><span class="s2">&quot;_time_index&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">time</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">enabled</span> <span class="o">=</span> <span class="kc">False</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">step</span><span class="p">()</span>
+
+<div class="viewcode-block" id="Reporter.check_value">
+<a class="viewcode-back" href="../../reporting.html#honeybees.reporter.Reporter.check_value">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">check_value</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">value</span><span class="p">:</span> <span class="n">Any</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Check whether the value is a Python integer or float, and is not infinite.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            value: The value to be checked.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="p">(</span>
+            <span class="nb">isinstance</span><span class="p">(</span><span class="n">value</span><span class="p">,</span> <span class="p">(</span><span class="nb">int</span><span class="p">,</span> <span class="nb">float</span><span class="p">))</span> <span class="ow">or</span> <span class="n">value</span> <span class="ow">is</span> <span class="kc">None</span>
+        <span class="p">):</span>  <span class="c1"># check item is normal Python float or int. This is required to succesfully convert to JSON.</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+                <span class="sa">f</span><span class="s2">&quot;value </span><span class="si">{</span><span class="n">value</span><span class="si">}</span><span class="s2"> of type </span><span class="si">{</span><span class="nb">type</span><span class="p">(</span><span class="n">value</span><span class="p">)</span><span class="si">}</span><span class="s2"> is not Python float or int&quot;</span>
+            <span class="p">)</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">value</span><span class="p">,</span> <span class="nb">float</span><span class="p">):</span>
+            <span class="k">assert</span> <span class="ow">not</span> <span class="n">isinf</span><span class="p">(</span><span class="n">value</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="Reporter.export_value">
+<a class="viewcode-back" href="../../reporting.html#honeybees.reporter.Reporter.export_value">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">export_value</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">name</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">value</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span> <span class="n">conf</span><span class="p">:</span> <span class="nb">dict</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Exports an array of values to the export folder.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            name: Name of the value to be exported.</span>
+<span class="sd">            value: The array itself.</span>
+<span class="sd">            conf: Configuration for saving the file. Contains options such a file format, and whether to export the array in this timestep at all.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="n">value</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">return</span> <span class="kc">None</span>
+        <span class="k">if</span> <span class="s2">&quot;format&quot;</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">conf</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+                <span class="sa">f</span><span class="s2">&quot;Export format must be specified for </span><span class="si">{</span><span class="n">name</span><span class="si">}</span><span class="s2"> in config file (npy/npz/csv/xlsx).&quot;</span>
+            <span class="p">)</span>
+        <span class="k">if</span> <span class="n">conf</span><span class="p">[</span><span class="s2">&quot;format&quot;</span><span class="p">]</span> <span class="o">==</span> <span class="s2">&quot;zarr&quot;</span><span class="p">:</span>
+            <span class="n">ds</span> <span class="o">=</span> <span class="n">conf</span><span class="p">[</span><span class="s2">&quot;_file&quot;</span><span class="p">]</span>
+            <span class="k">if</span> <span class="n">name</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">ds</span><span class="p">:</span>
+                <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">value</span><span class="p">,</span> <span class="p">(</span><span class="nb">float</span><span class="p">,</span> <span class="nb">int</span><span class="p">)):</span>
+                    <span class="n">shape</span> <span class="o">=</span> <span class="p">(</span><span class="n">ds</span><span class="p">[</span><span class="s2">&quot;time&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">size</span><span class="p">,)</span>
+                    <span class="n">chunks</span> <span class="o">=</span> <span class="p">(</span><span class="mi">1</span><span class="p">,)</span>
+                    <span class="n">compressor</span> <span class="o">=</span> <span class="kc">None</span>
+                    <span class="n">dtype</span> <span class="o">=</span> <span class="nb">type</span><span class="p">(</span><span class="n">value</span><span class="p">)</span>
+                    <span class="n">array_dimensions</span> <span class="o">=</span> <span class="p">[</span><span class="s2">&quot;time&quot;</span><span class="p">]</span>
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="n">shape</span> <span class="o">=</span> <span class="p">(</span><span class="n">ds</span><span class="p">[</span><span class="s2">&quot;time&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">size</span><span class="p">,</span> <span class="n">value</span><span class="o">.</span><span class="n">size</span><span class="p">)</span>
+                    <span class="n">chunks</span> <span class="o">=</span> <span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="n">value</span><span class="o">.</span><span class="n">size</span><span class="p">)</span>
+                    <span class="n">compressor</span> <span class="o">=</span> <span class="n">zstd_compressor</span>
+                    <span class="n">dtype</span> <span class="o">=</span> <span class="n">value</span><span class="o">.</span><span class="n">dtype</span>
+                    <span class="n">array_dimensions</span> <span class="o">=</span> <span class="p">[</span><span class="s2">&quot;time&quot;</span><span class="p">,</span> <span class="s2">&quot;agents&quot;</span><span class="p">]</span>
+                <span class="k">if</span> <span class="n">dtype</span> <span class="ow">in</span> <span class="p">(</span><span class="nb">float</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">float32</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">float64</span><span class="p">):</span>
+                    <span class="n">fill_value</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">nan</span>
+                <span class="k">elif</span> <span class="n">dtype</span> <span class="ow">in</span> <span class="p">(</span><span class="nb">int</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">int32</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">int64</span><span class="p">):</span>
+                    <span class="n">fill_value</span> <span class="o">=</span> <span class="o">-</span><span class="mi">1</span>
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+                        <span class="sa">f</span><span class="s2">&quot;Value </span><span class="si">{</span><span class="n">dtype</span><span class="si">}</span><span class="s2"> of type </span><span class="si">{</span><span class="nb">type</span><span class="p">(</span><span class="n">dtype</span><span class="p">)</span><span class="si">}</span><span class="s2"> not recognized.&quot;</span>
+                    <span class="p">)</span>
+                <span class="n">ds</span><span class="o">.</span><span class="n">create_dataset</span><span class="p">(</span>
+                    <span class="n">name</span><span class="p">,</span>
+                    <span class="n">shape</span><span class="o">=</span><span class="n">shape</span><span class="p">,</span>
+                    <span class="n">chunks</span><span class="o">=</span><span class="n">chunks</span><span class="p">,</span>
+                    <span class="n">dtype</span><span class="o">=</span><span class="n">dtype</span><span class="p">,</span>
+                    <span class="n">compressor</span><span class="o">=</span><span class="n">compressor</span><span class="p">,</span>
+                    <span class="n">fill_value</span><span class="o">=</span><span class="n">fill_value</span><span class="p">,</span>
+                <span class="p">)</span>
+                <span class="n">ds</span><span class="p">[</span><span class="n">name</span><span class="p">]</span><span class="o">.</span><span class="n">attrs</span><span class="p">[</span><span class="s2">&quot;_ARRAY_DIMENSIONS&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">array_dimensions</span>
+            <span class="n">index</span> <span class="o">=</span> <span class="n">conf</span><span class="p">[</span><span class="s2">&quot;_time_index&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">index</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">model</span><span class="o">.</span><span class="n">current_time</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">value</span><span class="o">.</span><span class="n">size</span> <span class="o">&lt;</span> <span class="n">ds</span><span class="p">[</span><span class="n">name</span><span class="p">][</span><span class="n">index</span><span class="p">]</span><span class="o">.</span><span class="n">size</span><span class="p">:</span>
+                <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Padding array with NaNs or -1 - temporary solution&quot;</span><span class="p">)</span>
+                <span class="n">value</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">pad</span><span class="p">(</span>
+                    <span class="n">value</span><span class="p">,</span>
+                    <span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">ds</span><span class="p">[</span><span class="n">name</span><span class="p">][</span><span class="n">index</span><span class="p">]</span><span class="o">.</span><span class="n">size</span> <span class="o">-</span> <span class="n">value</span><span class="o">.</span><span class="n">size</span><span class="p">),</span>
+                    <span class="n">mode</span><span class="o">=</span><span class="s2">&quot;constant&quot;</span><span class="p">,</span>
+                    <span class="n">constant_values</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">nan</span>
+                    <span class="k">if</span> <span class="n">value</span><span class="o">.</span><span class="n">dtype</span> <span class="ow">in</span> <span class="p">(</span><span class="nb">float</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">float32</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">float64</span><span class="p">)</span>
+                    <span class="k">else</span> <span class="o">-</span><span class="mi">1</span><span class="p">,</span>
+                <span class="p">)</span>
+            <span class="n">ds</span><span class="p">[</span><span class="n">name</span><span class="p">][</span><span class="n">index</span><span class="p">]</span> <span class="o">=</span> <span class="n">value</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">folder</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">export_folder</span><span class="p">,</span> <span class="n">name</span><span class="p">)</span>
+            <span class="n">os</span><span class="o">.</span><span class="n">makedirs</span><span class="p">(</span><span class="n">folder</span><span class="p">,</span> <span class="n">exist_ok</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+            <span class="n">fn</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">timesteps</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">isoformat</span><span class="p">()</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="s1">&#39;-&#39;</span><span class="p">,</span><span class="w"> </span><span class="s1">&#39;&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="s1">&#39;:&#39;</span><span class="p">,</span><span class="w"> </span><span class="s1">&#39;&#39;</span><span class="p">)</span><span class="si">}</span><span class="s2">&quot;</span>
+            <span class="k">if</span> <span class="n">conf</span><span class="p">[</span><span class="s2">&quot;format&quot;</span><span class="p">]</span> <span class="o">==</span> <span class="s2">&quot;npy&quot;</span><span class="p">:</span>
+                <span class="n">fn</span> <span class="o">+=</span> <span class="s2">&quot;.npy&quot;</span>
+                <span class="n">fp</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">folder</span><span class="p">,</span> <span class="n">fn</span><span class="p">)</span>
+                <span class="n">np</span><span class="o">.</span><span class="n">save</span><span class="p">(</span><span class="n">fp</span><span class="p">,</span> <span class="n">value</span><span class="p">)</span>
+            <span class="k">elif</span> <span class="n">conf</span><span class="p">[</span><span class="s2">&quot;format&quot;</span><span class="p">]</span> <span class="o">==</span> <span class="s2">&quot;npz&quot;</span><span class="p">:</span>
+                <span class="n">fn</span> <span class="o">+=</span> <span class="s2">&quot;.npz&quot;</span>
+                <span class="n">fp</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">folder</span><span class="p">,</span> <span class="n">fn</span><span class="p">)</span>
+                <span class="n">np</span><span class="o">.</span><span class="n">savez_compressed</span><span class="p">(</span><span class="n">fp</span><span class="p">,</span> <span class="n">data</span><span class="o">=</span><span class="n">value</span><span class="p">)</span>
+            <span class="k">elif</span> <span class="n">conf</span><span class="p">[</span><span class="s2">&quot;format&quot;</span><span class="p">]</span> <span class="o">==</span> <span class="s2">&quot;csv&quot;</span><span class="p">:</span>
+                <span class="n">fn</span> <span class="o">+=</span> <span class="s2">&quot;.csv&quot;</span>
+                <span class="n">fp</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">folder</span><span class="p">,</span> <span class="n">fn</span><span class="p">)</span>
+                <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">value</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">100_000</span><span class="p">:</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">model</span><span class="o">.</span><span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span>
+                        <span class="sa">f</span><span class="s2">&quot;Exporting </span><span class="si">{</span><span class="nb">len</span><span class="p">(</span><span class="n">value</span><span class="p">)</span><span class="si">}</span><span class="s2"> items to csv. This might take a long time and take a lot of space. Consider using NumPy (compressed) binary format (npy/npz).&quot;</span>
+                    <span class="p">)</span>
+                <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">fp</span><span class="p">,</span> <span class="s2">&quot;w&quot;</span><span class="p">)</span> <span class="k">as</span> <span class="n">f</span><span class="p">:</span>
+                    <span class="n">f</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s2">&quot;</span><span class="se">\n</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">join</span><span class="p">([</span><span class="nb">str</span><span class="p">(</span><span class="n">v</span><span class="p">)</span> <span class="k">for</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">value</span><span class="p">]))</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">conf</span><span class="p">[</span><span class="s1">&#39;format&#39;</span><span class="p">]</span><span class="si">}</span><span class="s2"> not recognized&quot;</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="Reporter.report_value">
+<a class="viewcode-back" href="../../reporting.html#honeybees.reporter.Reporter.report_value">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">report_value</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span> <span class="n">name</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">tuple</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]],</span> <span class="n">value</span><span class="p">:</span> <span class="n">Any</span><span class="p">,</span> <span class="n">conf</span><span class="p">:</span> <span class="nb">dict</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;This method is used to save and/or export model values.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            name: Name of the value to be exported.</span>
+<span class="sd">            value: The array itself.</span>
+<span class="sd">            conf: Configuration for saving the file. Contains options such a file format, and whether to export the data or save the data in the model.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">value</span><span class="p">,</span> <span class="nb">list</span><span class="p">):</span>
+            <span class="n">value</span> <span class="o">=</span> <span class="p">[</span><span class="n">v</span><span class="o">.</span><span class="n">item</span><span class="p">()</span> <span class="k">for</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">value</span><span class="p">]</span>
+            <span class="k">for</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">value</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">check_value</span><span class="p">(</span><span class="n">v</span><span class="p">)</span>
+        <span class="k">elif</span> <span class="n">np</span><span class="o">.</span><span class="n">isscalar</span><span class="p">(</span><span class="n">value</span><span class="p">):</span>
+            <span class="n">value</span> <span class="o">=</span> <span class="n">value</span><span class="o">.</span><span class="n">item</span><span class="p">()</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">check_value</span><span class="p">(</span><span class="n">value</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="s2">&quot;save&quot;</span> <span class="ow">in</span> <span class="n">conf</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">conf</span><span class="p">[</span><span class="s2">&quot;save&quot;</span><span class="p">]</span> <span class="ow">not</span> <span class="ow">in</span> <span class="p">(</span><span class="s2">&quot;save&quot;</span><span class="p">,</span> <span class="s2">&quot;export&quot;</span><span class="p">):</span>
+                <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+                    <span class="sa">f</span><span class="s2">&quot;Save type for </span><span class="si">{</span><span class="n">name</span><span class="si">}</span><span class="s2"> in config file must be &#39;save&#39;, &#39;save+export&#39; or &#39;export&#39;).&quot;</span>
+                <span class="p">)</span>
+
+            <span class="n">warnings</span><span class="o">.</span><span class="n">warn</span><span class="p">(</span>
+                <span class="s2">&quot;The `save` option is deprecated and will be removed in future versions. If you use &#39;save: export&#39; the option can simply be removed (new default). If you use &#39;save: save&#39;, please replace with &#39;single_file: true&#39;&quot;</span><span class="p">,</span>
+                <span class="ne">DeprecationWarning</span><span class="p">,</span>
+            <span class="p">)</span>
+            <span class="k">if</span> <span class="n">conf</span><span class="p">[</span><span class="s2">&quot;save&quot;</span><span class="p">]</span> <span class="o">==</span> <span class="s2">&quot;save&quot;</span><span class="p">:</span>
+                <span class="n">conf</span><span class="p">[</span><span class="s2">&quot;single_file&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="kc">True</span>
+            <span class="k">del</span> <span class="n">conf</span><span class="p">[</span><span class="s2">&quot;save&quot;</span><span class="p">]</span>
+
+        <span class="k">if</span> <span class="p">(</span>
+            <span class="s2">&quot;single_file&quot;</span> <span class="ow">in</span> <span class="n">conf</span>
+            <span class="ow">and</span> <span class="n">conf</span><span class="p">[</span><span class="s2">&quot;single_file&quot;</span><span class="p">]</span> <span class="ow">is</span> <span class="kc">True</span>
+            <span class="ow">and</span> <span class="n">conf</span><span class="p">[</span><span class="s2">&quot;format&quot;</span><span class="p">]</span> <span class="o">!=</span> <span class="s2">&quot;zarr&quot;</span>  <span class="c1"># for zarr, we always save per timestep</span>
+        <span class="p">):</span>
+            <span class="k">try</span><span class="p">:</span>
+                <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">name</span><span class="p">,</span> <span class="nb">tuple</span><span class="p">):</span>
+                    <span class="n">name</span><span class="p">,</span> <span class="n">ID</span> <span class="o">=</span> <span class="n">name</span>
+                    <span class="k">if</span> <span class="n">name</span> <span class="ow">not</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">variables</span><span class="p">:</span>
+                        <span class="bp">self</span><span class="o">.</span><span class="n">variables</span><span class="p">[</span><span class="n">name</span><span class="p">]</span> <span class="o">=</span> <span class="p">{}</span>
+                    <span class="k">if</span> <span class="n">ID</span> <span class="ow">not</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">variables</span><span class="p">[</span><span class="n">name</span><span class="p">]:</span>
+                        <span class="bp">self</span><span class="o">.</span><span class="n">variables</span><span class="p">[</span><span class="n">name</span><span class="p">][</span><span class="n">ID</span><span class="p">]</span> <span class="o">=</span> <span class="p">[]</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">variables</span><span class="p">[</span><span class="n">name</span><span class="p">][</span><span class="n">ID</span><span class="p">]</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">value</span><span class="p">)</span>
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="k">if</span> <span class="n">name</span> <span class="ow">not</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">variables</span><span class="p">:</span>
+                        <span class="bp">self</span><span class="o">.</span><span class="n">variables</span><span class="p">[</span><span class="n">name</span><span class="p">]</span> <span class="o">=</span> <span class="p">[]</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">variables</span><span class="p">[</span><span class="n">name</span><span class="p">]</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">value</span><span class="p">)</span>
+            <span class="k">except</span> <span class="ne">KeyError</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="ne">KeyError</span><span class="p">(</span>
+                    <span class="sa">f</span><span class="s2">&quot;Variable </span><span class="si">{</span><span class="n">name</span><span class="si">}</span><span class="s2"> not initialized. This likely means that an agent is reporting for a group that was not is not the reporter&quot;</span>
+                <span class="p">)</span>
+
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">if</span> <span class="s2">&quot;frequency&quot;</span> <span class="ow">in</span> <span class="n">conf</span> <span class="ow">and</span> <span class="n">conf</span><span class="p">[</span><span class="s2">&quot;frequency&quot;</span><span class="p">]</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="k">if</span> <span class="n">conf</span><span class="p">[</span><span class="s2">&quot;frequency&quot;</span><span class="p">]</span> <span class="o">==</span> <span class="s2">&quot;initial&quot;</span><span class="p">:</span>
+                    <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">model</span><span class="o">.</span><span class="n">current_timestep</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+                        <span class="bp">self</span><span class="o">.</span><span class="n">export_value</span><span class="p">(</span><span class="n">name</span><span class="p">,</span> <span class="n">value</span><span class="p">,</span> <span class="n">conf</span><span class="p">)</span>
+                <span class="k">elif</span> <span class="n">conf</span><span class="p">[</span><span class="s2">&quot;frequency&quot;</span><span class="p">]</span> <span class="o">==</span> <span class="s2">&quot;final&quot;</span><span class="p">:</span>
+                    <span class="k">if</span> <span class="p">(</span>
+                        <span class="bp">self</span><span class="o">.</span><span class="n">model</span><span class="o">.</span><span class="n">current_timestep</span> <span class="o">==</span> <span class="bp">self</span><span class="o">.</span><span class="n">model</span><span class="o">.</span><span class="n">n_timesteps</span> <span class="o">-</span> <span class="mi">1</span>
+                    <span class="p">):</span>  <span class="c1"># timestep is 0-indexed, so n_timesteps - 1 is the last timestep</span>
+                        <span class="bp">self</span><span class="o">.</span><span class="n">export_value</span><span class="p">(</span><span class="n">name</span><span class="p">,</span> <span class="n">value</span><span class="p">,</span> <span class="n">conf</span><span class="p">)</span>
+                <span class="k">elif</span> <span class="s2">&quot;every&quot;</span> <span class="ow">in</span> <span class="n">conf</span><span class="p">[</span><span class="s2">&quot;frequency&quot;</span><span class="p">]:</span>
+                    <span class="n">every</span> <span class="o">=</span> <span class="n">conf</span><span class="p">[</span><span class="s2">&quot;frequency&quot;</span><span class="p">][</span><span class="s2">&quot;every&quot;</span><span class="p">]</span>
+                    <span class="k">if</span> <span class="n">every</span> <span class="o">==</span> <span class="s2">&quot;year&quot;</span><span class="p">:</span>
+                        <span class="n">month</span> <span class="o">=</span> <span class="n">conf</span><span class="p">[</span><span class="s2">&quot;frequency&quot;</span><span class="p">][</span><span class="s2">&quot;month&quot;</span><span class="p">]</span>
+                        <span class="n">day</span> <span class="o">=</span> <span class="n">conf</span><span class="p">[</span><span class="s2">&quot;frequency&quot;</span><span class="p">][</span><span class="s2">&quot;day&quot;</span><span class="p">]</span>
+                        <span class="k">if</span> <span class="p">(</span>
+                            <span class="bp">self</span><span class="o">.</span><span class="n">model</span><span class="o">.</span><span class="n">current_time</span><span class="o">.</span><span class="n">month</span> <span class="o">==</span> <span class="n">month</span>
+                            <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">model</span><span class="o">.</span><span class="n">current_time</span><span class="o">.</span><span class="n">day</span> <span class="o">==</span> <span class="n">day</span>
+                        <span class="p">):</span>
+                            <span class="bp">self</span><span class="o">.</span><span class="n">export_value</span><span class="p">(</span><span class="n">name</span><span class="p">,</span> <span class="n">value</span><span class="p">,</span> <span class="n">conf</span><span class="p">)</span>
+                    <span class="k">elif</span> <span class="n">every</span> <span class="o">==</span> <span class="s2">&quot;month&quot;</span><span class="p">:</span>
+                        <span class="n">day</span> <span class="o">=</span> <span class="n">conf</span><span class="p">[</span><span class="s2">&quot;frequency&quot;</span><span class="p">][</span><span class="s2">&quot;day&quot;</span><span class="p">]</span>
+                        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">model</span><span class="o">.</span><span class="n">current_time</span><span class="o">.</span><span class="n">day</span> <span class="o">==</span> <span class="n">day</span><span class="p">:</span>
+                            <span class="bp">self</span><span class="o">.</span><span class="n">export_value</span><span class="p">(</span><span class="n">name</span><span class="p">,</span> <span class="n">value</span><span class="p">,</span> <span class="n">conf</span><span class="p">)</span>
+                    <span class="k">elif</span> <span class="n">every</span> <span class="o">==</span> <span class="s2">&quot;day&quot;</span><span class="p">:</span>
+                        <span class="bp">self</span><span class="o">.</span><span class="n">export_value</span><span class="p">(</span><span class="n">name</span><span class="p">,</span> <span class="n">value</span><span class="p">,</span> <span class="n">conf</span><span class="p">)</span>
+                    <span class="k">else</span><span class="p">:</span>
+                        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+                            <span class="sa">f</span><span class="s2">&quot;Frequency every </span><span class="si">{</span><span class="n">conf</span><span class="p">[</span><span class="s1">&#39;every&#39;</span><span class="p">]</span><span class="si">}</span><span class="s2"> not recognized (must be &#39;yearly&#39;, or &#39;monthly&#39;).&quot;</span>
+                        <span class="p">)</span>
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Frequency </span><span class="si">{</span><span class="n">conf</span><span class="p">[</span><span class="s1">&#39;frequency&#39;</span><span class="p">]</span><span class="si">}</span><span class="s2"> not recognized.&quot;</span><span class="p">)</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">export_value</span><span class="p">(</span><span class="n">name</span><span class="p">,</span> <span class="n">value</span><span class="p">,</span> <span class="n">conf</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="Reporter.mean_per_ID">
+<a class="viewcode-back" href="../../reporting.html#honeybees.reporter.Reporter.mean_per_ID">[docs]</a>
+    <span class="nd">@staticmethod</span>
+    <span class="nd">@njit</span><span class="p">(</span><span class="n">cache</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">mean_per_ID</span><span class="p">(</span>
+        <span class="n">values</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span> <span class="n">group_ids</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span> <span class="n">n_groups</span><span class="p">:</span> <span class="nb">int</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Calculates the mean value per group.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            values: Numpy array of values.</span>
+<span class="sd">            group_ids: Group IDs for each value. Must be same size as values.</span>
+<span class="sd">            n_groups: The total number of groups.</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            mean_per_ID: The mean value for each of the groups.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">assert</span> <span class="n">values</span><span class="o">.</span><span class="n">size</span> <span class="o">==</span> <span class="n">group_ids</span><span class="o">.</span><span class="n">size</span>
+        <span class="n">size</span> <span class="o">=</span> <span class="n">values</span><span class="o">.</span><span class="n">size</span>
+        <span class="n">count_per_group</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="n">n_groups</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">int32</span><span class="p">)</span>
+        <span class="n">sum_per_group</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="n">n_groups</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">values</span><span class="o">.</span><span class="n">dtype</span><span class="p">)</span>
+        <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">size</span><span class="p">):</span>
+            <span class="n">group_id</span> <span class="o">=</span> <span class="n">group_ids</span><span class="p">[</span><span class="n">i</span><span class="p">]</span>
+            <span class="k">assert</span> <span class="n">group_id</span> <span class="o">&lt;</span> <span class="n">n_groups</span>
+            <span class="n">count_per_group</span><span class="p">[</span><span class="n">group_id</span><span class="p">]</span> <span class="o">+=</span> <span class="mi">1</span>
+            <span class="n">sum_per_group</span><span class="p">[</span><span class="n">group_id</span><span class="p">]</span> <span class="o">+=</span> <span class="n">values</span><span class="p">[</span><span class="n">i</span><span class="p">]</span>
+        <span class="k">return</span> <span class="n">sum_per_group</span> <span class="o">/</span> <span class="n">count_per_group</span></div>
+
+
+<div class="viewcode-block" id="Reporter.sum_per_ID">
+<a class="viewcode-back" href="../../reporting.html#honeybees.reporter.Reporter.sum_per_ID">[docs]</a>
+    <span class="nd">@staticmethod</span>
+    <span class="nd">@njit</span><span class="p">(</span><span class="n">cache</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">sum_per_ID</span><span class="p">(</span>
+        <span class="n">values</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span> <span class="n">group_ids</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span> <span class="n">n_groups</span><span class="p">:</span> <span class="nb">int</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Calculates the sum value per group.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            values: Numpy array of values.</span>
+<span class="sd">            group_ids: Group IDs for each value. Must be same size as values.</span>
+<span class="sd">            n_groups: The total number of groups.</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            sum_per_ID: The sum value for each of the groups.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">assert</span> <span class="n">values</span><span class="o">.</span><span class="n">size</span> <span class="o">==</span> <span class="n">group_ids</span><span class="o">.</span><span class="n">size</span>
+        <span class="n">size</span> <span class="o">=</span> <span class="n">values</span><span class="o">.</span><span class="n">size</span>
+        <span class="n">sum_per_group</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="n">n_groups</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">values</span><span class="o">.</span><span class="n">dtype</span><span class="p">)</span>
+        <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">size</span><span class="p">):</span>
+            <span class="n">group_id</span> <span class="o">=</span> <span class="n">group_ids</span><span class="p">[</span><span class="n">i</span><span class="p">]</span>
+            <span class="k">assert</span> <span class="n">group_id</span> <span class="o">&lt;</span> <span class="n">n_groups</span>
+            <span class="n">sum_per_group</span><span class="p">[</span><span class="n">group_id</span><span class="p">]</span> <span class="o">+=</span> <span class="n">values</span><span class="p">[</span><span class="n">i</span><span class="p">]</span>
+        <span class="k">return</span> <span class="n">sum_per_group</span></div>
+
+
+<div class="viewcode-block" id="Reporter.parse_agent_data">
+<a class="viewcode-back" href="../../reporting.html#honeybees.reporter.Reporter.parse_agent_data">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">parse_agent_data</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">name</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">values</span><span class="p">:</span> <span class="n">Any</span><span class="p">,</span> <span class="n">agents</span><span class="p">,</span> <span class="n">conf</span><span class="p">:</span> <span class="nb">dict</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;This method is used to apply the relevant function to the given data.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            name: Name of the data to report.</span>
+<span class="sd">            values: Numpy array of values.</span>
+<span class="sd">            agents: The relevant agent class.</span>
+<span class="sd">            conf: Dictionary with report configuration for values.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">function</span> <span class="o">=</span> <span class="n">conf</span><span class="p">[</span><span class="s2">&quot;function&quot;</span><span class="p">]</span>
+        <span class="k">if</span> <span class="n">function</span> <span class="ow">is</span> <span class="kc">None</span> <span class="ow">or</span> <span class="n">values</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">values</span> <span class="o">=</span> <span class="n">deepcopy</span><span class="p">(</span>
+                <span class="n">values</span>
+            <span class="p">)</span>  <span class="c1"># need to copy item, because values are passed without applying any a function.</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">report_value</span><span class="p">(</span><span class="n">name</span><span class="p">,</span> <span class="n">values</span><span class="p">,</span> <span class="n">conf</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">function</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span> <span class="o">=</span> <span class="n">conf</span><span class="p">[</span><span class="s2">&quot;function&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s2">&quot;,&quot;</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">function</span> <span class="o">==</span> <span class="s2">&quot;mean&quot;</span><span class="p">:</span>
+                <span class="n">value</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">mean</span><span class="p">(</span><span class="n">values</span><span class="p">)</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">report_value</span><span class="p">(</span><span class="n">name</span><span class="p">,</span> <span class="n">value</span><span class="p">,</span> <span class="n">conf</span><span class="p">)</span>
+            <span class="k">elif</span> <span class="n">function</span> <span class="o">==</span> <span class="s2">&quot;sum&quot;</span><span class="p">:</span>
+                <span class="n">value</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">values</span><span class="p">)</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">report_value</span><span class="p">(</span><span class="n">name</span><span class="p">,</span> <span class="n">value</span><span class="p">,</span> <span class="n">conf</span><span class="p">)</span>
+            <span class="k">elif</span> <span class="n">function</span> <span class="o">==</span> <span class="s2">&quot;sample&quot;</span><span class="p">:</span>
+                <span class="n">sample</span> <span class="o">=</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">agents</span><span class="p">,</span> <span class="s2">&quot;sample&quot;</span><span class="p">)</span>
+                <span class="n">value</span> <span class="o">=</span> <span class="n">values</span><span class="p">[</span><span class="n">sample</span><span class="p">]</span>
+                <span class="k">for</span> <span class="n">s</span><span class="p">,</span> <span class="n">v</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="n">sample</span><span class="p">,</span> <span class="n">value</span><span class="p">):</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">report_value</span><span class="p">((</span><span class="n">name</span><span class="p">,</span> <span class="n">s</span><span class="p">),</span> <span class="n">v</span><span class="p">,</span> <span class="n">conf</span><span class="p">)</span>
+            <span class="k">elif</span> <span class="n">function</span> <span class="o">==</span> <span class="s2">&quot;groupcount&quot;</span><span class="p">:</span>
+                <span class="k">for</span> <span class="n">group</span> <span class="ow">in</span> <span class="n">args</span><span class="p">:</span>
+                    <span class="n">group</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">group</span><span class="p">)</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">report_value</span><span class="p">(</span>
+                        <span class="p">(</span><span class="n">name</span><span class="p">,</span> <span class="n">group</span><span class="p">),</span> <span class="n">np</span><span class="o">.</span><span class="n">count_nonzero</span><span class="p">(</span><span class="n">values</span> <span class="o">==</span> <span class="n">group</span><span class="p">),</span> <span class="n">conf</span>
+                    <span class="p">)</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">function</span><span class="si">}</span><span class="s2"> function unknown&quot;</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="Reporter.extract_agent_data">
+<a class="viewcode-back" href="../../reporting.html#honeybees.reporter.Reporter.extract_agent_data">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">extract_agent_data</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">name</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">conf</span><span class="p">:</span> <span class="nb">dict</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;This method is used to extract agent data and apply the relevant function to the given data.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            name: Name of the data to report.</span>
+<span class="sd">            conf: Dictionary with report configuration for values.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">agents</span> <span class="o">=</span> <span class="n">attrgetter</span><span class="p">(</span><span class="n">conf</span><span class="p">[</span><span class="s2">&quot;type&quot;</span><span class="p">])(</span><span class="bp">self</span><span class="o">.</span><span class="n">model</span><span class="o">.</span><span class="n">agents</span><span class="p">)</span>
+        <span class="n">varname</span> <span class="o">=</span> <span class="n">conf</span><span class="p">[</span><span class="s2">&quot;varname&quot;</span><span class="p">]</span>
+        <span class="n">fancy_index</span> <span class="o">=</span> <span class="n">re</span><span class="o">.</span><span class="n">search</span><span class="p">(</span><span class="sa">r</span><span class="s2">&quot;\[.*?\]&quot;</span><span class="p">,</span> <span class="n">varname</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">fancy_index</span><span class="p">:</span>
+            <span class="n">fancy_index</span> <span class="o">=</span> <span class="n">fancy_index</span><span class="o">.</span><span class="n">group</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span>
+            <span class="n">varname</span> <span class="o">=</span> <span class="n">varname</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="n">fancy_index</span><span class="p">,</span> <span class="s2">&quot;&quot;</span><span class="p">)</span>
+
+        <span class="k">try</span><span class="p">:</span>
+            <span class="n">values</span> <span class="o">=</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">agents</span><span class="p">,</span> <span class="n">varname</span><span class="p">)</span>
+        <span class="k">except</span> <span class="ne">AttributeError</span><span class="p">:</span>
+            <span class="nb">print</span><span class="p">(</span>
+                <span class="sa">f</span><span class="s2">&quot;Trying to export &#39;</span><span class="si">{</span><span class="n">varname</span><span class="si">}</span><span class="s2">&#39;, but no such attribute exists for agent type &#39;</span><span class="si">{</span><span class="n">conf</span><span class="p">[</span><span class="s1">&#39;type&#39;</span><span class="p">]</span><span class="si">}</span><span class="s2">&#39;&quot;</span>
+            <span class="p">)</span>
+            <span class="n">values</span> <span class="o">=</span> <span class="kc">None</span>
+
+        <span class="k">if</span> <span class="n">fancy_index</span><span class="p">:</span>
+            <span class="n">values</span> <span class="o">=</span> <span class="nb">eval</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;values</span><span class="si">{</span><span class="n">fancy_index</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="s2">&quot;split&quot;</span> <span class="ow">in</span> <span class="n">conf</span> <span class="ow">and</span> <span class="n">conf</span><span class="p">[</span><span class="s2">&quot;split&quot;</span><span class="p">]:</span>
+            <span class="k">for</span> <span class="n">ID</span><span class="p">,</span> <span class="n">admin_values</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="n">agents</span><span class="o">.</span><span class="n">ids</span><span class="p">,</span> <span class="n">values</span><span class="p">):</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">parse_agent_data</span><span class="p">((</span><span class="n">name</span><span class="p">,</span> <span class="n">ID</span><span class="p">),</span> <span class="n">admin_values</span><span class="p">,</span> <span class="n">agents</span><span class="p">,</span> <span class="n">conf</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">parse_agent_data</span><span class="p">(</span><span class="n">name</span><span class="p">,</span> <span class="n">values</span><span class="p">,</span> <span class="n">agents</span><span class="p">,</span> <span class="n">conf</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="Reporter.step">
+<a class="viewcode-back" href="../../reporting.html#honeybees.reporter.Reporter.step">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">step</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;This method is called every timestep. First appends the current model time to the list of times for the reporter. Then iterates through the data to be reported on and calls the extract_agent_data method for each of them.&quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">timesteps</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">model</span><span class="o">.</span><span class="n">current_time</span><span class="p">)</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">enabled</span><span class="p">:</span>
+            <span class="k">for</span> <span class="n">name</span><span class="p">,</span> <span class="n">conf</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">model</span><span class="o">.</span><span class="n">config</span><span class="p">[</span><span class="s2">&quot;report&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">extract_agent_data</span><span class="p">(</span><span class="n">name</span><span class="p">,</span> <span class="n">conf</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="Reporter.finalize">
+<a class="viewcode-back" href="../../reporting.html#honeybees.reporter.Reporter.finalize">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">finalize</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;This method can be called to save the data that is currently saved in memory to disk.&quot;&quot;&quot;</span>
+        <span class="n">report_dict</span> <span class="o">=</span> <span class="p">{}</span>
+        <span class="k">for</span> <span class="n">name</span><span class="p">,</span> <span class="n">values</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">variables</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+            <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">values</span><span class="p">,</span> <span class="nb">dict</span><span class="p">):</span>
+                <span class="n">df</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="o">.</span><span class="n">from_dict</span><span class="p">(</span><span class="n">values</span><span class="p">)</span>
+                <span class="n">df</span><span class="o">.</span><span class="n">index</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">timesteps</span>
+            <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">values</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">Iterable</span><span class="p">):</span>
+                <span class="n">df</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="o">.</span><span class="n">from_dict</span><span class="p">(</span>
+                    <span class="p">{</span><span class="n">k</span><span class="p">:</span> <span class="n">v</span> <span class="k">for</span> <span class="n">k</span><span class="p">,</span> <span class="n">v</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">timesteps</span><span class="p">,</span> <span class="n">values</span><span class="p">)}</span>
+                <span class="p">)</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">df</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">(</span><span class="n">values</span><span class="p">,</span> <span class="n">index</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">timesteps</span><span class="p">,</span> <span class="n">columns</span><span class="o">=</span><span class="p">[</span><span class="n">name</span><span class="p">])</span>
+            <span class="k">if</span> <span class="s2">&quot;format&quot;</span> <span class="ow">not</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">model</span><span class="o">.</span><span class="n">config</span><span class="p">[</span><span class="s2">&quot;report&quot;</span><span class="p">][</span><span class="n">name</span><span class="p">]:</span>
+                <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+                    <span class="sa">f</span><span class="s2">&quot;Key &#39;format&#39; not specified in config file for </span><span class="si">{</span><span class="n">name</span><span class="si">}</span><span class="s2">&quot;</span>
+                <span class="p">)</span>
+            <span class="n">export_format</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">model</span><span class="o">.</span><span class="n">config</span><span class="p">[</span><span class="s2">&quot;report&quot;</span><span class="p">][</span><span class="n">name</span><span class="p">][</span><span class="s2">&quot;format&quot;</span><span class="p">]</span>
+            <span class="n">filepath</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">export_folder</span><span class="p">,</span> <span class="n">name</span> <span class="o">+</span> <span class="s2">&quot;.&quot;</span> <span class="o">+</span> <span class="n">export_format</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">export_format</span> <span class="o">==</span> <span class="s2">&quot;csv&quot;</span><span class="p">:</span>
+                <span class="n">df</span><span class="o">.</span><span class="n">to_csv</span><span class="p">(</span><span class="n">filepath</span><span class="p">)</span>
+            <span class="k">elif</span> <span class="n">export_format</span> <span class="o">==</span> <span class="s2">&quot;xlsx&quot;</span><span class="p">:</span>
+                <span class="n">df</span><span class="o">.</span><span class="n">to_excel</span><span class="p">(</span><span class="n">filepath</span><span class="p">)</span>
+            <span class="k">elif</span> <span class="n">export_format</span> <span class="o">==</span> <span class="s2">&quot;npy&quot;</span><span class="p">:</span>
+                <span class="n">np</span><span class="o">.</span><span class="n">save</span><span class="p">(</span><span class="n">filepath</span><span class="p">,</span> <span class="n">df</span><span class="o">.</span><span class="n">values</span><span class="p">)</span>
+            <span class="k">elif</span> <span class="n">export_format</span> <span class="o">==</span> <span class="s2">&quot;npz&quot;</span><span class="p">:</span>
+                <span class="n">np</span><span class="o">.</span><span class="n">savez_compressed</span><span class="p">(</span><span class="n">filepath</span><span class="p">,</span> <span class="n">data</span><span class="o">=</span><span class="n">df</span><span class="o">.</span><span class="n">values</span><span class="p">)</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;save_to format </span><span class="si">{</span><span class="n">export_format</span><span class="si">}</span><span class="s2"> unknown&quot;</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">report_dict</span></div>
+
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">report</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="n">warnings</span><span class="o">.</span><span class="n">warn</span><span class="p">(</span>
+            <span class="s2">&quot;The `report` method is deprecated and will be removed in future versions. Please use the `finalize` method instead.&quot;</span>
+        <span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">finalize</span><span class="p">()</span></div>
+
+</pre></div>
+
+           </div>
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; <a href="../../copyright.html">Copyright</a> 2021, IIASA and VU-IVM.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

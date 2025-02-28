@@ -1,0 +1,346 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="./">
+<head>
+  <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Reporting &mdash; Honeybees 0.1 documentation</title>
+      <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=5dd5ad26" />
+      <link rel="stylesheet" type="text/css" href="_static/css/theme.css?v=e59714d7" />
+
+  
+      <script src="_static/jquery.js?v=5be48651"></script>
+      <script src="_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="_static/documentation_options.js?v=27b9c81c"></script>
+      <script src="_static/doctools.js?v=695de88e"></script>
+      <script src="_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="copyright" title="Copyright" href="copyright.html" />
+    <link rel="next" title="Command line arguments" href="command_line_args.html" />
+    <link rel="prev" title="Artists" href="artists.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="index.html" class="icon icon-home">
+            Honeybees
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">General</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="introduction.html">Introduction</a></li>
+<li class="toctree-l1"><a class="reference internal" href="installation.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="model.html">Model</a></li>
+<li class="toctree-l1"><a class="reference internal" href="agent_agent_interaction.html">Agent-agent interaction</a></li>
+<li class="toctree-l1"><a class="reference internal" href="agent_environment_interaction.html">Agent-environment interaction</a></li>
+<li class="toctree-l1"><a class="reference internal" href="visualisation.html">Visualisation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="artists.html">Artists</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">Reporting</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#honeybees.reporter.Reporter"><code class="docutils literal notranslate"><span class="pre">Reporter</span></code></a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#honeybees.reporter.Reporter.check_value"><code class="docutils literal notranslate"><span class="pre">Reporter.check_value()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#honeybees.reporter.Reporter.export_value"><code class="docutils literal notranslate"><span class="pre">Reporter.export_value()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#honeybees.reporter.Reporter.extract_agent_data"><code class="docutils literal notranslate"><span class="pre">Reporter.extract_agent_data()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#honeybees.reporter.Reporter.finalize"><code class="docutils literal notranslate"><span class="pre">Reporter.finalize()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#honeybees.reporter.Reporter.mean_per_ID"><code class="docutils literal notranslate"><span class="pre">Reporter.mean_per_ID()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#honeybees.reporter.Reporter.parse_agent_data"><code class="docutils literal notranslate"><span class="pre">Reporter.parse_agent_data()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#honeybees.reporter.Reporter.report_value"><code class="docutils literal notranslate"><span class="pre">Reporter.report_value()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#honeybees.reporter.Reporter.step"><code class="docutils literal notranslate"><span class="pre">Reporter.step()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#honeybees.reporter.Reporter.sum_per_ID"><code class="docutils literal notranslate"><span class="pre">Reporter.sum_per_ID()</span></code></a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="command_line_args.html">Command line arguments</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Library</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="library/mapIO.html">MapIO</a></li>
+<li class="toctree-l1"><a class="reference internal" href="library/raster.html">Raster</a></li>
+<li class="toctree-l1"><a class="reference internal" href="library/geohash.html">Geohash</a></li>
+<li class="toctree-l1"><a class="reference internal" href="library/neighbors.html">Neighbors</a></li>
+<li class="toctree-l1"><a class="reference internal" href="library/math.html">Math</a></li>
+<li class="toctree-l1"><a class="reference internal" href="library/helpers.html">Helpers</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">About</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="authors_page.html">Authors</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="index.html">Honeybees</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="index.html" class="icon icon-home" aria-label="Home"></a></li>
+      <li class="breadcrumb-item active">Reporting</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="_sources/reporting.rst.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="module-honeybees.reporter">
+<span id="reporting"></span><h1>Reporting<a class="headerlink" href="#module-honeybees.reporter" title="Link to this heading"></a></h1>
+<p>This module is used to report data to the disk and to extract data for visualisation. After initialization of the reporter in the model, the <code class="xref py py-meth docutils literal notranslate"><span class="pre">honeybees.report.Reporter.step()</span></code> method is called every timestep, which can obtain data from the agents, and report to disk or save the data for visualiation or writing to disk once the model is finished. The variables to be reported can be configured in the config file. All data is saved to the report folder by default.</p>
+<p>In the configuration file you can specify which data should be reported. In this file you can configure which data should be saved from the model in the <cite>report</cite> folder. This should be formatted as follows:</p>
+<blockquote>
+<div><ul class="simple">
+<li><dl class="simple">
+<dt><strong>report</strong>:</dt><dd><ul>
+<li><dl class="simple">
+<dt><strong>name</strong>: name of the folder to which the data is saved.</dt><dd><ul>
+<li><p><strong>type</strong>: agent type e.g., farmer. Should be identical to attribute name in Agents class.</p></li>
+<li><p><strong>function</strong>: whether to use a function to parse the data. ‘null’ means the data is saved literally, ‘mean’ takes the mean etc. Options are sum/mean.</p></li>
+<li><p><strong>varname</strong>: attribute name of variable in agent class.</p></li>
+<li><p><strong>format</strong>: format to save to. Can be ‘csv’ to save to csv-file per timestep, ‘npy’ to save in NumPy binary format, or ‘npz’ to save in NumPy compressed binary format.</p></li>
+<li><p><strong>initial_only</strong>: if true only save the data for the first timestep.</p></li>
+<li><p><strong>save</strong>: save variable in model run, or export, or both (save/save+export/export).</p></li>
+</ul>
+</dd>
+</dl>
+</li>
+<li><dl class="simple">
+<dt><strong>name2</strong>:</dt><dd><ul>
+<li><p>…</p></li>
+<li><p>…</p></li>
+</ul>
+</dd>
+</dl>
+</li>
+<li><dl class="simple">
+<dt><strong>…</strong>:</dt><dd><ul>
+<li><p>…</p></li>
+<li><p>…</p></li>
+</ul>
+</dd>
+</dl>
+</li>
+</ul>
+</dd>
+</dl>
+</li>
+</ul>
+</div></blockquote>
+<dl class="py class">
+<dt class="sig sig-object py" id="honeybees.reporter.Reporter">
+<em class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">Reporter</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">model</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">folder</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/honeybees/reporter.html#Reporter"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#honeybees.reporter.Reporter" title="Link to this definition"></a></dt>
+<dd><p>This class is used to report data to disk or for visualisation. The <cite>step</cite> method is called each timestep from the model.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>model</strong> – The model.</p></li>
+<li><p><strong>subfolder</strong> – Optional name of the subfolder to be reported in. By default the report folder from the configuration file is used (general:report_folder).</p></li>
+</ul>
+</dd>
+</dl>
+<dl class="py method">
+<dt class="sig sig-object py" id="honeybees.reporter.Reporter.check_value">
+<span class="sig-name descname"><span class="pre">check_value</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">value</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/honeybees/reporter.html#Reporter.check_value"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#honeybees.reporter.Reporter.check_value" title="Link to this definition"></a></dt>
+<dd><p>Check whether the value is a Python integer or float, and is not infinite.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>value</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-data docutils literal notranslate"><span class="pre">Any</span></code></span>) – The value to be checked.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="honeybees.reporter.Reporter.export_value">
+<span class="sig-name descname"><span class="pre">export_value</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">name</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">value</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">conf</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/honeybees/reporter.html#Reporter.export_value"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#honeybees.reporter.Reporter.export_value" title="Link to this definition"></a></dt>
+<dd><p>Exports an array of values to the export folder.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>name</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></span>) – Name of the value to be exported.</p></li>
+<li><p><strong>value</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">ndarray</span></code></span>) – The array itself.</p></li>
+<li><p><strong>conf</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">dict</span></code></span>) – Configuration for saving the file. Contains options such a file format, and whether to export the array in this timestep at all.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p><span class="sphinx_autodoc_typehints-type"><code class="xref py py-obj docutils literal notranslate"><span class="pre">None</span></code></span></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="honeybees.reporter.Reporter.extract_agent_data">
+<span class="sig-name descname"><span class="pre">extract_agent_data</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">name</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">conf</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/honeybees/reporter.html#Reporter.extract_agent_data"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#honeybees.reporter.Reporter.extract_agent_data" title="Link to this definition"></a></dt>
+<dd><p>This method is used to extract agent data and apply the relevant function to the given data.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>name</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></span>) – Name of the data to report.</p></li>
+<li><p><strong>conf</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">dict</span></code></span>) – Dictionary with report configuration for values.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p><span class="sphinx_autodoc_typehints-type"><code class="xref py py-obj docutils literal notranslate"><span class="pre">None</span></code></span></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="honeybees.reporter.Reporter.finalize">
+<span class="sig-name descname"><span class="pre">finalize</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/honeybees/reporter.html#Reporter.finalize"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#honeybees.reporter.Reporter.finalize" title="Link to this definition"></a></dt>
+<dd><p>This method can be called to save the data that is currently saved in memory to disk.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">dict</span></code></span></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="honeybees.reporter.Reporter.mean_per_ID">
+<em class="property"><span class="k"><span class="pre">static</span></span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">mean_per_ID</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">values</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">group_ids</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">n_groups</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/honeybees/reporter.html#Reporter.mean_per_ID"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#honeybees.reporter.Reporter.mean_per_ID" title="Link to this definition"></a></dt>
+<dd><p>Calculates the mean value per group.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>values</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">ndarray</span></code></span>) – Numpy array of values.</p></li>
+<li><p><strong>group_ids</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">ndarray</span></code></span>) – Group IDs for each value. Must be same size as values.</p></li>
+<li><p><strong>n_groups</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code></span>) – The total number of groups.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p><strong>mean_per_ID</strong> – The mean value for each of the groups.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">ndarray</span></code></span></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="honeybees.reporter.Reporter.parse_agent_data">
+<span class="sig-name descname"><span class="pre">parse_agent_data</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">name</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">values</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">agents</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">conf</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/honeybees/reporter.html#Reporter.parse_agent_data"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#honeybees.reporter.Reporter.parse_agent_data" title="Link to this definition"></a></dt>
+<dd><p>This method is used to apply the relevant function to the given data.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>name</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></span>) – Name of the data to report.</p></li>
+<li><p><strong>values</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-data docutils literal notranslate"><span class="pre">Any</span></code></span>) – Numpy array of values.</p></li>
+<li><p><strong>agents</strong> – The relevant agent class.</p></li>
+<li><p><strong>conf</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">dict</span></code></span>) – Dictionary with report configuration for values.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p><span class="sphinx_autodoc_typehints-type"><code class="xref py py-obj docutils literal notranslate"><span class="pre">None</span></code></span></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="honeybees.reporter.Reporter.report_value">
+<span class="sig-name descname"><span class="pre">report_value</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">name</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">value</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">conf</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/honeybees/reporter.html#Reporter.report_value"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#honeybees.reporter.Reporter.report_value" title="Link to this definition"></a></dt>
+<dd><p>This method is used to save and/or export model values.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>name</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-data docutils literal notranslate"><span class="pre">Union</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code>, <code class="xref py py-class docutils literal notranslate"><span class="pre">tuple</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code>, <code class="xref py py-data docutils literal notranslate"><span class="pre">Any</span></code>]]</span>) – Name of the value to be exported.</p></li>
+<li><p><strong>value</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-data docutils literal notranslate"><span class="pre">Any</span></code></span>) – The array itself.</p></li>
+<li><p><strong>conf</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">dict</span></code></span>) – Configuration for saving the file. Contains options such a file format, and whether to export the data or save the data in the model.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p><span class="sphinx_autodoc_typehints-type"><code class="xref py py-obj docutils literal notranslate"><span class="pre">None</span></code></span></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="honeybees.reporter.Reporter.step">
+<span class="sig-name descname"><span class="pre">step</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/honeybees/reporter.html#Reporter.step"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#honeybees.reporter.Reporter.step" title="Link to this definition"></a></dt>
+<dd><p>This method is called every timestep. First appends the current model time to the list of times for the reporter. Then iterates through the data to be reported on and calls the extract_agent_data method for each of them.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><code class="xref py py-obj docutils literal notranslate"><span class="pre">None</span></code></span></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="honeybees.reporter.Reporter.sum_per_ID">
+<em class="property"><span class="k"><span class="pre">static</span></span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">sum_per_ID</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">values</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">group_ids</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">n_groups</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/honeybees/reporter.html#Reporter.sum_per_ID"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#honeybees.reporter.Reporter.sum_per_ID" title="Link to this definition"></a></dt>
+<dd><p>Calculates the sum value per group.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>values</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">ndarray</span></code></span>) – Numpy array of values.</p></li>
+<li><p><strong>group_ids</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">ndarray</span></code></span>) – Group IDs for each value. Must be same size as values.</p></li>
+<li><p><strong>n_groups</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code></span>) – The total number of groups.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p><strong>sum_per_ID</strong> – The sum value for each of the groups.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">ndarray</span></code></span></p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="artists.html" class="btn btn-neutral float-left" title="Artists" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="command_line_args.html" class="btn btn-neutral float-right" title="Command line arguments" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; <a href="copyright.html">Copyright</a> 2021, IIASA and VU-IVM.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>
