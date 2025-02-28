@@ -280,10 +280,12 @@ class ModularServer(tornado.web.Application):
         model_params={},
         port=None,
         description="No description available",
+        initialization_method=None,
     ):
         # Initializing the model
         self.model_name = name
         self.model_cls = model_cls
+        self.initialization_method = initialization_method
         if port:
             self.port = port
         self.description = description
@@ -337,6 +339,8 @@ class ModularServer(tornado.web.Application):
                 model_params[key] = val
 
         self.model = self.model_cls(**model_params)
+        if self.initialization_method is not None:
+            getattr(self.model, self.initialization_method)(initialize_only=True)
 
         for element in self.render_elements:
             element.reset()
