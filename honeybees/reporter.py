@@ -22,6 +22,7 @@ In the configuration file you can specify which data should be reported. In this
 import re
 from collections.abc import Iterable
 import os
+from pathlib import Path
 import numpy as np
 import pandas as pd
 from operator import attrgetter
@@ -94,8 +95,9 @@ class Reporter:
             self.enabled = True
             for name, conf in self.model.config["report"].items():
                 if conf["format"] == "zarr":
-                    filepath = os.path.join(self.export_folder, name + ".zarr.zip")
-                    ds = zarr.open_group(filepath, mode="w")
+                    filepath = Path(self.export_folder) / (name + ".zarr.zip")
+                    store = zarr.storage.ZipStore(filepath, mode="w")
+                    ds = zarr.open_group(store, mode="w")
 
                     time = create_time_array(
                         start=self.model.current_time,
@@ -103,13 +105,26 @@ class Reporter:
                         timestep=self.model.timestep_length,
                         conf=conf,
                     )
-
-                    ds.create_dataset(
-                        "time",
-                        data=time,
-                        dtype="datetime64[ns]",
+                    time = np.array(
+                        [np.datetime64(t, "s").astype(np.int64) for t in time],
+                        dtype=np.int64,
                     )
-                    ds["time"].attrs["_ARRAY_DIMENSIONS"] = ["time"]
+
+                    time_group = ds.create_array(
+                        "time",
+                        shape=time.shape,
+                        dtype=time.dtype,
+                    )
+                    time_group[:] = time
+
+                    time_group.attrs.update(
+                        {
+                            "standard_name": "time",
+                            "units": "seconds since 1970-01-01T00:00:00",
+                            "calendar": "gregorian",
+                            "_ARRAY_DIMENSIONS": ["time"],
+                        }
+                    )
 
                     conf["_file"] = ds
                     conf["_time_index"] = time
@@ -159,7 +174,11 @@ class Reporter:
                 else:
                     shape = (ds["time"].size, value.size)
                     chunks = (1, value.size)
-                    compressor = zstd_compressor
+                    compressor = zarr.codecs.BloscCodec(
+                        cname="zlib",
+                        clevel=9,
+                        shuffle=zarr.codecs.BloscShuffle.shuffle,
+                    )
                     dtype = value.dtype
                     array_dimensions = ["time", "agents"]
                 if dtype in (float, np.float32, np.float64):
@@ -179,7 +198,12 @@ class Reporter:
                     fill_value=fill_value,
                 )
                 ds[name].attrs["_ARRAY_DIMENSIONS"] = array_dimensions
-            index = conf["_time_index"].index(self.model.current_time)
+            index = np.argwhere(
+                conf["_time_index"]
+                == np.datetime64(self.model.current_time, "s").astype(
+                    conf["_time_index"].dtype
+                )
+            ).item()
             if value.size < ds[name][index].size:
                 print("Padding array with NaNs or -1 - temporary solution")
                 value = np.pad(
