@@ -1,8 +1,9 @@
 ## Introduction
-Honeybees is an agent-based modelling framework targeted at large-scale agent-based models written in Python. The framework is heavily inpsired by [Mesa](https://github.com/projectmesa/mesa>), but the agent class is fully adapted for high-speed and memory efficient agent operations.
+Honeybees is an agent-based modelling framework targeted at large-scale agent-based models written in Python. The framework is heavily inpsired by [Mesa](https://github.com/projectmesa/mesa), but the agent class is fully adapted for high-speed and memory efficient agent operations.
 
 Rather than each class instance representing a single agent, each class can represent an (almost) infinite number of agents of the same type, such as farmers, governments or traders. Agent characteristics (and location) are stored in NumPy (or CuPy) arrays, where the first item of each array represents the characteristic of the first agent, the second item for the second agent, and so fort.
 
+```py
     import numpy as np
     from honeybees.agents import AgentBaseClass
 
@@ -11,9 +12,11 @@ Rather than each class instance representing a single agent, each class can repr
             self.n = 10_000_000  # initialize 10 million farmers
             self.income = randint(0, 1000, size=self.n) #  
             self.has_well = randint(0, 2, size=self.n)
+```
 
 Changing the state of an agent based on their characteristics can be done by interacting directly with those arrays. In the following example, all agents with an income above 500, install a well.
 
+```py
     import numpy as np
     from honeybees.agents import AgentBaseClass
 
@@ -25,9 +28,11 @@ Changing the state of an agent based on their characteristics can be done by int
 
         def install_well(self):
             self.has_well[self.income > 500] = True
+```
 
 More complicated behavior can be implemented using [Numba](http://numba.pydata.org/), which can be used to compile Python code, and thus is several orders of magnitude faster than normal Python code (almost identical to NumPy speed). However, as Numba-compiled code cannot access class atributes, a helper method can be used. In the example below agent decision-making is exactly the same as above, but using a Numba compiled method.
 
+```py
     import numpy as np
     from honeybees.agents import AgentBaseClass
     from numba import njit
@@ -47,11 +52,13 @@ More complicated behavior can be implemented using [Numba](http://numba.pydata.o
         
         def install_well(self):
             self.install_well_numba(self.n, self.income, self.has_well)
+```
 
 ## Multiple agent types
 
 You can also make multiple agent types. For example, by creating a government. For example, you could create an Agent class that initializes both the Farmers and the Government class. By passing the Agent class to the Government class, the Government class can easily access the farmers. In this example, the government installs a well for every 100th agent every timestep.
 
+```py
     import numpy as np
     from honeybees.agents import AgentBaseClass
 
@@ -77,3 +84,4 @@ You can also make multiple agent types. For example, by creating a government. F
         def step(self):
             self.government.step()
             self.farmers.step()
+```
