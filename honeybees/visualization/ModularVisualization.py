@@ -203,7 +203,8 @@ class SocketHandler(tornado.websocket.WebSocketHandler):
             if not self.application.model.running:
                 self.write_message({"type": "end"})
             else:
-                self.application.model.step(step_size=msg["n"])
+                for i in range(int(msg["n"])):
+                    self.application.model.step()
                 self.write_message(self.viz_state_message(update=True))
                 self.write_message(self.current_time)
 

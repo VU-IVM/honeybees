@@ -56,15 +56,11 @@ class Canvas(VisualizationElement):
 
     def convert_lon_to_x(self, x, model):
         assert not np.isnan(x)
-        return (x - model.area.geoms["xmin"]) / (
-            model.area.geoms["xmax"] - model.area.geoms["xmin"]
-        )
+        return (x - model.xmin) / (model.xmax - model.xmin)
 
     def convert_lat_to_y(self, y, model):
         assert not np.isnan(y)
-        return (y - model.area.geoms["ymin"]) / (
-            model.area.geoms["ymax"] - model.area.geoms["ymin"]
-        )
+        return (y - model.ymin) / (model.ymax - model.ymin)
 
     def get_portrayal(self, artist, geography_kwargs):
         if geography_kwargs:
