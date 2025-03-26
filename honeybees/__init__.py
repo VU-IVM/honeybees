@@ -8,6 +8,6 @@ Submodules
 """
 
 __title__ = "honeybees"
-__version__ = "1.1.1"
+__version__ = "1.2.0"
 __email__ = "j.a.debruijn at outlook com"
 __status__ = "development"
